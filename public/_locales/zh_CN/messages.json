@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "RateGlide · 汇见 — 划词汇率与全球比价"
+  },
+  "extensionDescription": {
+    "message": "选中网页外币价格，即刻换算。插件内查询 Visa、万事达、Revolut 官方公开报价，比较银行与汇款平台的费用和到账估算。"
+  },
+  "actionTitle": {
+    "message": "RateGlide · 汇见 · 随手换算"
+  },
+  "convertSelection": {
+    "message": "换算选中的外币金额"
+  }
+}

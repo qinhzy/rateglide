@@ -1,0 +1,14 @@
+node_modules/
+dist/
+release/
+.DS_Store
+*.pem
+qa/
+design/concept.png
+.env
+.env.*
+!.env.example
+*.log
+test-results/
+playwright-report/
+coverage/

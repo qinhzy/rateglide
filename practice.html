@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>汇见 · 划词练习场</title>
+    <style>
+      html {
+        font:
+          16px/1.8 -apple-system,
+          BlinkMacSystemFont,
+          'PingFang SC',
+          sans-serif;
+        color: #172821;
+        background: #f5f5f2;
+      }
+      body {
+        max-width: 850px;
+        margin: 0 auto;
+        padding: 50px 25px 100px;
+      }
+      header {
+        border-bottom: 1px solid #d9e2dc;
+        padding-bottom: 28px;
+      }
+      h1 {
+        font-size: 34px;
+        line-height: 1.35;
+        margin: 0 0 12px;
+      }
+      p {
+        color: #68776d;
+      }
+      article {
+        background: #fff;
+        border: 1px solid #dfe6e0;
+        padding: 28px 32px;
+        border-radius: 15px;
+        margin: 24px 0;
+      }
+      h2 {
+        font-size: 21px;
+        margin: 0 0 8px;
+      }
+      .price {
+        font-size: 24px;
+        color: #145642;
+        font-weight: 650;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      td,
+      th {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #e2e7e4;
+      }
+      th {
+        font-size: 13px;
+        color: #717c76;
+        font-weight: 500;
+      }
+      kbd {
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 2px 7px;
+        font-size: 12px;
+      }
+      input {
+        font: inherit;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      footer {
+        font-size: 13px;
+        color: #718078;
+      }
+      .note {
+        font-size: 13px;
+      }
+      a {
+        color: #145642;
+      }
+      @media (max-width: 500px) {
+        body {
+          padding: 30px 16px;
+        }
+        article {
+          padding: 20px 16px;
+        }
+        td,
+        th {
+          padding: 9px;
+          font-size: 14px;
+        }
+        h1 {
+          font-size: 27px;
+        }
+      }
+      .practice-language {
+        float: right;
+        font: 12px system-ui;
+        border: 1px solid #d9e2dc;
+        border-radius: 8px;
+        padding: 8px;
+        background: #fff;
+        color: #145642;
+        margin-bottom: 16px;
+      }
+      header:after {
+        content: '';
+        display: block;
+        clear: both;
+      }
+      h1 {
+        clear: both;
+      }
+    </style>
+    <script type="module" src="/src/practice.ts"></script>
+  </head>
+  <body>
+    <header>
+      <h1>让世界的价格，更贴近你。</h1>
+      <p>这是汇见的划词练习场。拖动鼠标选中下面的一笔价格，点击浮出的换算提示。</p>
+      <span class="note">安装后第一次使用，请刷新这页。按 <kbd>Esc</kbd> 关闭浮层。</span>
+    </header>
+    <article>
+      <h2>A little less baggage. A little more world.</h2>
+      <p>一只背包，一程旅行。The Nomad Pack is designed for everyday explorers.</p>
+      <p>Nomad Pack / 旅行背包　<span class="price" id="price-usd">$129.00</span></p>
+      <p>Weekend Stay / 周末小住　<span class="price" id="price-eur">€ 249,50</span></p>
+      <p>Airport Express / 机场快线　<span class="price" id="price-hkd">HK$ 115.00</span></p>
+    </article>
+    <article>
+      <h2>世界各地的价格，选一笔试试</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>格式</th>
+            <th>可以选中的金额</th>
+            <th>货币</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>北美</td>
+            <td id="us-format">US$ 1,234.56</td>
+            <td>美元</td>
+          </tr>
+          <tr>
+            <td>欧洲</td>
+            <td id="eu-format">1.234,56 EUR</td>
+            <td>欧元</td>
+          </tr>
+          <tr>
+            <td>日本</td>
+            <td id="yen-format">¥ 12,800</td>
+            <td>日元（可改）</td>
+          </tr>
+          <tr>
+            <td>中文</td>
+            <td id="cn-format">2.5万日元</td>
+            <td>日元</td>
+          </tr>
+          <tr>
+            <td>加拿大</td>
+            <td id="cad-format">CA$ 89.95</td>
+            <td>加元</td>
+          </tr>
+          <tr>
+            <td>印度</td>
+            <td id="in-format">₹ 1,23,456</td>
+            <td>卢比</td>
+          </tr>
+          <tr>
+            <td>瑞士</td>
+            <td id="ch-format">CHF 1’234.50</td>
+            <td>瑞士法郎</td>
+          </tr>
+          <tr>
+            <td>韩国</td>
+            <td id="kr-format">₩ 49,000</td>
+            <td>韩元</td>
+          </tr>
+          <tr>
+            <td>泰国</td>
+            <td id="th-format">฿ 1,280</td>
+            <td>泰铢</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+    <article>
+      <h2>安静，也是一种体验</h2>
+      <p id="no-price">这是一段普通文字，选中后不应该出现换算提示。</p>
+      <p id="date">2026-09-08</p>
+      <p id="range">$100 - $200</p>
+      <p class="note">输入框中的金额不会触发划词，避免打扰编辑：</p>
+      <input aria-label="不会触发的输入框" value="$129.00" />
+      <div contenteditable="true" aria-label="可编辑内容">USD 200.00</div>
+    </article>
+    <footer>
+      此页价格为交互练习示例，汇率查询使用真实在线数据。请勿把示例商品价格视为在售报价。
+    </footer>
+  </body>
+</html>

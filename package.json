@@ -1,0 +1,42 @@
+{
+  "name": "rateglide",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && node scripts/build.mjs",
+    "test": "tsx --test tests/*.test.ts",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:webkit": "node scripts/test-webkit.mjs",
+    "test:payments": "node scripts/test-payments.mjs",
+    "test:i18n": "node scripts/test-i18n.mjs",
+    "package": "node scripts/package.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.24",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "esbuild": "^0.25.9",
+    "playwright": "1.62.1",
+    "prettier": "3.6.2",
+    "sharp": "0.35.4",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2",
+    "vite": "^6.3.5"
+  },
+  "description": "Currency at your cursor. Bilingual currency conversion, bank comparisons, and official card rates.",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

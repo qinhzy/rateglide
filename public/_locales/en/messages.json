@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "RateGlide — Currency Converter & Card Rates"
+  },
+  "extensionDescription": {
+    "message": "Select a price to convert currencies. Compare transfer estimates and get official Visa, Mastercard, and Revolut quotes inside RateGlide."
+  },
+  "actionTitle": {
+    "message": "RateGlide · Currency at your cursor"
+  },
+  "convertSelection": {
+    "message": "Convert selected currency amount"
+  }
+}
