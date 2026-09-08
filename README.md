@@ -74,7 +74,7 @@ See [the privacy document](docs/PRIVACY.md) for permissions, provider domains, t
 
 ## Develop and test
 
-Use Node.js 22+ and the pnpm version in `package.json`.
+Use Node.js 22.13+ and the pnpm version in `package.json`.
 
 ```sh
 pnpm install --frozen-lockfile

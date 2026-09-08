@@ -37,6 +37,6 @@
   "description": "Currency at your cursor. Bilingual currency conversion, bank comparisons, and official card rates.",
   "packageManager": "pnpm@11.19.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   }
 }

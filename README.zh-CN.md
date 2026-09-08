@@ -50,7 +50,7 @@
 
 ## 开发与测试
 
-使用 Node.js 22+ 和 `package.json` 指定的 pnpm 版本。
+使用 Node.js 22.13+ 和 `package.json` 指定的 pnpm 版本。
 
 ```sh
 pnpm install --frozen-lockfile
