@@ -41,8 +41,11 @@ export const english: Record<string, string> = {
   '该日尚无新牌价，官方返回 {0} 的报价。':
     'No new rate for this date. The provider returned its {0} rate.',
   '两家公布日期不同，已分别标明。': 'The providers returned different rate dates, shown above.',
-  '相同交易条件，预计账单相差 {0} {1}。':
-    'For the same transaction, the estimated bills differ by {0} {1}.',
+  '{0} 预计少扣 {1} {2}。': '{0} is estimated to cost {1} {2} less.',
+  '两家预计账单相同。': 'Both estimated bills are the same.',
+  '其中一家为上次缓存报价，暂不比较。':
+    'One quote is a saved fallback, so the bills are not compared.',
+  更省: 'Lower',
   关于入账日期与费用: 'About billing dates and fees',
   '报价来自卡组织官方计算器，并非秒级市场中间价。授权日、处理日、退款以及发卡行政策可能影响最终入账；这里的银行附加费已计入一次。同币种计算仅作费用试算。商户或 ATM 的动态货币转换（DCC）可能不使用这两家卡组织的汇率。':
     'These are official card calculator rates. Authorization and processing dates, refunds, and issuer policies can affect your final bill. The bank fee is included once. Same-currency results are fee estimates. Merchant or ATM dynamic currency conversion (DCC) may use a different rate.',
@@ -80,6 +83,8 @@ export const english: Record<string, string> = {
     'Try another currency or region. Missing quotes are never replaced with a market rate.',
   '查看 GBP → EUR 路线': 'Try GBP → EUR',
   '{0} 组报价 · 各地区分别列出': '{0} quotes · Regions shown separately',
+  最多到账: 'Most received',
+  '少到账 {0}': '{0} less',
   '参考价，另行比较': 'Reference rates',
   '下列金额未扣费用，不能与上方预计到账直接排名。':
     'These amounts exclude fees and are separate from the transfer estimates above.',
@@ -91,8 +96,8 @@ export const english: Record<string, string> = {
   取消关注此币种: 'Remove currency from watchlist',
   关注此币种: 'Watch this currency',
   原币种: 'From currency',
-  '请输入有效金额，例如 1,000.50 或 1.000,50':
-    'Enter a valid amount, such as 1,000.50 or 1.000,50.',
+  '请输入有效金额，例如 1,000.50、1.000,50 或 2.5k':
+    'Enter a valid amount, such as 1,000.50, 1.000,50, or 2.5k.',
   约合: 'Approximately',
   交换币种: 'Swap currencies',
   换算结果: 'Conversion result',
@@ -163,7 +168,13 @@ export const english: Record<string, string> = {
     'By default, a small prompt appears before any rate request.',
   选中后提示: 'Ask before converting',
   选中后直接换算: 'Convert immediately',
-  '按住 Option 再选中': 'Only while holding Alt / Option',
+  '按住 Alt / Option 再选中': 'Only while holding Alt / Option',
+  快捷键: 'Keyboard shortcut',
+  '选中文字后按下即可换算，也适用于已是目标货币的价格':
+    'Converts the selected text, including prices already in your home currency.',
+  未设置: 'Not set',
+  修改: 'Change',
+  当前快捷键: 'Current shortcut',
   识别纯数字: 'Recognize plain numbers',
   '无货币符号时也提示；可能把普通数字识别为金额':
     'Also prompt for numbers without currency symbols. May detect non-price numbers.',
@@ -201,8 +212,8 @@ export const english: Record<string, string> = {
   '一次选中，少一次心算': 'One selection. Less mental math.',
   '在普通网页上，用鼠标选中一笔完整价格，例如':
     'On a regular webpage, select a complete price such as ',
-  '，点击「换算为 CNY」即可。按 Escape 或点击空白处关闭浮层。':
-    ', then click the conversion prompt. Press Escape or click outside to dismiss it.',
+  '，点击「换算为 {0}」即可。按 Escape 或点击空白处关闭浮层。':
+    ', then click “Convert to {0}”. Press Escape or click outside to dismiss it.',
   '2.5万日元': 'JPY 25,000',
   '上方为格式示例。练习页专门启用了划词功能，安装后可直接体验，无需启动本地服务。':
     'These are format examples. The built-in practice page works immediately after installation, with no local server.',
@@ -215,11 +226,11 @@ export const english: Record<string, string> = {
   '同一符号可能代表不同货币。默认 $ 为美元、¥ 为日元，提示中会标明；可在浮层或设置里更改。':
     'Symbols can refer to more than one currency. By default, $ means USD and ¥ means JPY. The assumption is shown and can be changed in the popup or settings.',
   不想每次点击提示: 'Skip the prompt',
-  '在偏好设置切换到「选中后直接换算」，或仅在按住 Option 选中时触发。':
+  '在偏好设置切换到「选中后直接换算」，或仅在按住 Alt / Option 选中时触发。':
     'In Preferences, choose Convert immediately, or trigger conversion only while holding Alt / Option.',
   快捷键与右键: 'Keyboard and context menu',
-  '右键选中文字 → 用汇见换算；默认快捷键 Option + Shift + C（浏览器有冲突时可在扩展快捷键管理中修改）。':
-    'Right-click selected text and choose Convert with RateGlide. The default shortcut is Alt / Option + Shift + C; change it in your browser’s extension shortcuts if it conflicts.',
+  '右键选中文字 → 用 RateGlide 换算；默认快捷键 Alt / Option + Shift + C（浏览器有冲突时可在扩展快捷键管理中修改）。已是目标货币的价格不会自动提示，可用这两种方式换算。':
+    'Right-click selected text and choose Convert with RateGlide. The default shortcut is Alt / Option + Shift + C; change it in your browser’s extension shortcuts if it conflicts. Prices already in your home currency do not prompt automatically; use either option to convert them.',
   报价为什么不同: 'Why rates differ',
   '中间价没有扣除费用。银行现汇买入／卖出是两个方向；平台到账价还受手续费、金额、国家、支付方式影响。':
     'Mid-market rates exclude fees. Bank buying and selling rates apply in different directions. Transfer estimates also depend on fees, amounts, countries, and payment methods.',
@@ -238,6 +249,9 @@ export const english: Record<string, string> = {
   只留在这台浏览器里: 'Only in this browser',
   导出: 'Export',
   清空: 'Clear',
+  '确认清空全部记录？': 'Clear all history?',
+  '当前未开启，复制换算结果不会保存': 'Off. Copied results are not saved.',
+  '复制一次换算结果，它会出现在这里。': 'Copy a conversion result and it will appear here.',
   '开启记录后，每次主动复制换算结果会保存一条。最多 50 条，不保存网页地址或选中原文。':
     'When enabled, copying a result saves a conversion. Up to 50 entries are kept, without page URLs or selected text.',
   还没有保存的换算: 'No saved conversions yet',
@@ -295,6 +309,10 @@ export const english: Record<string, string> = {
   '取消关注 ': 'Unwatch ',
   添加关注币种: 'Currency to watch',
   添加关注: 'Add currency',
+  已在关注列表中: 'Already in your watchlist.',
+  这是目标货币: 'This is your home currency.',
+  '最多关注 20 种货币': 'You can watch up to 20 currencies.',
+  '在换算中打开 {0}': 'Open {0} in the converter',
   '连接失败 · 缓存': 'Offline · Cached',
   过期缓存: 'Stale cache',
   每日参考: 'Daily reference',
@@ -308,6 +326,8 @@ export const english: Record<string, string> = {
   '选中外币价格，让换算随手发生': 'Select a price. See it in your currency.',
   '已暂停，仍可使用工具栏换算': 'Paused. The toolbar converter still works.',
   网页划词开关: 'Selection conversion',
+  '在 {0} 停用': 'Pause on {0}',
+  '已在 {0} 停用 · 恢复': 'Paused on {0} · Resume',
   查看数据来源与支持范围: 'Sources and coverage',
   汇见: 'RateGlide',
   选择币种: 'Choose a currency',
@@ -316,6 +336,9 @@ export const english: Record<string, string> = {
   关闭币种搜索: 'Close currency search',
   '没有找到币种，试试 USD 或 美元': 'No currencies found. Try USD or dollar.',
   '{0} 个币种代码 · 覆盖范围因数据源而异': '{0} currency codes · Coverage varies by provider',
+  常用: 'Frequent',
+  全部币种: 'All currencies',
+  '{0} 个匹配 · ↑↓ 选择，Enter 确认': '{0} matches · ↑↓ to move, Enter to choose',
   '正在获取最新汇率…': 'Getting the latest rate…',
   重新获取: 'Retry',
   '来源时间：': 'Source timestamp: ',
@@ -373,6 +396,7 @@ export const english: Record<string, string> = {
   等值换算: 'Equal value',
   'Wise 暂不可用或不支持此币种，已使用每日参考价。':
     'Wise is unavailable or does not support this currency. Using a daily reference rate.',
+  'Wise 暂不可用或不支持此币种。': 'Wise is unavailable or does not support this currency.',
   '最新请求失败，显示上次缓存；请勿当作实时价。':
     'The latest request failed. Showing a saved quote, not a live rate.',
   未知请求: 'Unknown request.',
@@ -492,6 +516,9 @@ export const english: Record<string, string> = {
   韩元: 'South Korean won',
   泰铢: 'Thai baht',
   '安静，也是一种体验': 'Quiet when it should be.',
+  '已是目标货币的价格也不会提示，可用右键菜单或快捷键换算。':
+    'Prices already in your home currency stay quiet too; use the context menu or shortcut to convert them.',
+  '目标货币 · 不提示': 'Home currency · stays quiet',
   '这是一段普通文字，选中后不应该出现换算提示。':
     'Selecting this ordinary sentence should not trigger a conversion prompt.',
   '输入框中的金额不会触发划词，避免打扰编辑：':

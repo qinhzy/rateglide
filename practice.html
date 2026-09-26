@@ -121,6 +121,23 @@
       h1 {
         clear: both;
       }
+      .home-tag {
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: #e6f0eb;
+        color: #145642;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        user-select: none;
+      }
+      td > .home-tag {
+        display: block;
+        width: fit-content;
+        margin: 4px 0 0;
+        white-space: normal;
+      }
     </style>
     <script type="module" src="/src/practice.ts"></script>
   </head>
@@ -201,6 +218,7 @@
       <p id="no-price">这是一段普通文字，选中后不应该出现换算提示。</p>
       <p id="date">2026-09-08</p>
       <p id="range">$100 - $200</p>
+      <p class="note">已是目标货币的价格也不会提示，可用右键菜单或快捷键换算。</p>
       <p class="note">输入框中的金额不会触发划词，避免打扰编辑：</p>
       <input aria-label="不会触发的输入框" value="$129.00" />
       <div contenteditable="true" aria-label="可编辑内容">USD 200.00</div>

@@ -25,7 +25,7 @@ try {
   );
   await page.getByLabel('原币种', { exact: true }).click();
   await page.getByLabel('搜索币种', { exact: true }).fill('EUR');
-  await page.getByRole('button', { name: /欧元 Euro EUR/ }).click();
+  await page.getByRole('option', { name: /欧元 Euro EUR/ }).click();
   check(
     'WebKit searchable currency picker',
     (await page.getByLabel('原币种', { exact: true }).innerText()).includes('EUR'),

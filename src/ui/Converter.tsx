@@ -4,32 +4,48 @@ import { ArrowRight, ArrowUpDown, Check, Copy, RefreshCw, Star } from 'lucide-re
 import { rpc } from '../core/client';
 import { SOURCE_LABELS } from '../core/providers';
 import { formatAmount, formatRate } from '../data/currencies';
-import { parseNumber } from '../core/parser';
+import { parseAmount } from '../core/parser';
 import type { Quote, Settings, Source } from '../core/types';
-import { CurrencyPicker, ErrorBox, IconButton, Loading, SourceMeta } from './shared';
-export type ConvertState = { amount: string; from: string; to: string };
+import {
+  CurrencyPicker,
+  ErrorBox,
+  IconButton,
+  Loading,
+  SourceMeta,
+  usePricePaste,
+  type ConvertState,
+} from './shared';
+export type { ConvertState };
 export function Converter({
   value,
   setValue,
   settings,
   onCompare,
   onFavorite,
+  autoFocus = false,
 }: {
   value: ConvertState;
   setValue: (v: ConvertState) => void;
   settings: Settings;
   onCompare: () => void;
   onFavorite: () => void;
+  autoFocus?: boolean;
 }) {
   const [quote, setQuote] = useState<Quote | null>(null),
     [error, setError] = useState(''),
     [loading, setLoading] = useState(false),
     [revision, setRevision] = useState(0),
     [copied, setCopied] = useState(false);
-  const serial = useRef(0);
+  const serial = useRef(0),
+    input = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState<Source>(settings.source);
-  const amount = parseNumber(value.amount);
+  const amount = parseAmount(value.amount);
+  const onPaste = usePricePaste(value, setValue);
   useEffect(() => setSource(settings.source), [settings.source]);
+  useEffect(() => {
+    // Opening the toolbar popup lets you type a new amount straight away.
+    if (autoFocus) input.current?.select();
+  }, [autoFocus]);
   useEffect(() => {
     const id = ++serial.current;
     setLoading(true);
@@ -80,14 +96,18 @@ export function Converter({
       </div>
       <div className={'amount-field ' + (amount === null ? 'invalid' : '')}>
         <input
+          ref={input}
           id="amount"
           aria-label={t('兑换金额')}
+          aria-invalid={amount === null}
           inputMode="decimal"
           autoComplete="off"
+          autoFocus={autoFocus}
           spellCheck={false}
           maxLength={50}
           value={value.amount}
           onChange={(e) => setValue({ ...value, amount: e.target.value })}
+          onPaste={onPaste}
         />
         <CurrencyPicker
           label={t('原币种')}
@@ -96,7 +116,7 @@ export function Converter({
         />
       </div>
       {amount === null ? (
-        <p className="field-error">{t('请输入有效金额，例如 1,000.50 或 1.000,50')}</p>
+        <p className="field-error">{t('请输入有效金额，例如 1,000.50、1.000,50 或 2.5k')}</p>
       ) : null}
       <div className="swap-line">
         <span>{t('约合')}</span>
@@ -133,9 +153,18 @@ export function Converter({
       </div>
       <div className="rate-line">
         <span>
-          {quote && !loading
-            ? `1 ${value.from} = ${formatRate(quote.rate)} ${value.to}`
-            : t('汇率会保留来源与更新时间')}
+          {quote && !loading ? (
+            <>
+              1 {value.from} = {formatRate(quote.rate)} {value.to}
+              {value.from !== value.to ? (
+                <small className="inverse-rate">
+                  1 {value.to} = {formatRate(1 / quote.rate)} {value.from}
+                </small>
+              ) : null}
+            </>
+          ) : (
+            t('汇率会保留来源与更新时间')
+          )}
         </span>
         <div>
           <IconButton
@@ -170,9 +199,7 @@ export function Converter({
       {quote ? (
         <>
           <SourceMeta quote={quote} />
-          {quote.stale ||
-          quote.source !== 'wise' ||
-          (source === 'auto' && quote.source !== 'wise') ? (
+          {quote.stale || quote.source !== 'wise' ? (
             <p className={'notice ' + (quote.stale ? 'warning' : '')}>{t(quote.notice || '')}</p>
           ) : (
             <p className="notice">{t('中间价未含费用；实际到账金额可在比价中查看。')}</p>

@@ -16,6 +16,7 @@
   --error-bg: #fff6ef;
   --error-border: #edd5c5;
   --toggle-off: #a7b1ab;
+  --visa: #5168ae;
 }
 :root[data-theme='dark'] {
   --canvas: #111916;
@@ -35,6 +36,7 @@
   --error-bg: #372b22;
   --error-border: #654934;
   --toggle-off: #506357;
+  --visa: #a9b8f2;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -56,6 +58,7 @@
     --error-bg: #372b22;
     --error-border: #654934;
     --toggle-off: #506357;
+    --visa: #a9b8f2;
     color-scheme: dark;
   }
 }

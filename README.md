@@ -8,13 +8,14 @@ RateGlide is a browser extension with **English and Simplified Chinese** interfa
 
 ## What you can do
 
-- Select `$129.00`, `€ 1.234,56`, `HK$ 2,680`, or `2.5万日元` on a webpage and convert it without leaving the page.
-- Search currencies, swap directions, copy results, and keep a watchlist.
-- Query **Visa and Mastercard official calculators** inside the extension, with actual rate dates, optional issuer fees, historical queries, and estimated bills.
+- Select `$129.00`, `€ 1.234,56`, `HK$ 2,680`, or `2.5万日元` on a webpage and convert it without leaving the page. Prices already in your home currency stay quiet, and the popup follows the selection as you scroll.
+- Search currencies by code, name, country, or everyday Chinese names such as 加元 and 美金, with the keyboard or the mouse. Amounts accept `2.5k` or `1.2万`, and pasting a price such as `€ 1.234,56` fills in its currency too.
+- Swap directions, see both rate directions, copy results, and keep a watchlist. The toolbar remembers your last conversion.
+- Query **Visa and Mastercard official calculators** inside the extension, with actual rate dates, optional issuer fees, historical queries, estimated bills, and which card is estimated to cost less.
 - View **Revolut public exchange quotes** by account region, including plan fees.
-- Compare available **Wise, HSBC, PayPal, Remitly, Western Union, OFX, and other provider estimates**, with fees, received amounts, regions, and collection times.
+- Compare available **Wise, HSBC, PayPal, Remitly, Western Union, OFX, and other provider estimates**, with fees, received amounts, regions, and collection times. The route with the most received is marked, along with how much less each alternative delivers.
 - Switch language from the toolbar or Preferences. It follows the browser by default and synchronizes across open extension pages and selection popups.
-- Choose light, dark, or system appearance; prompt before conversion, convert immediately, or require Alt / Option; exclude sites and optionally keep local history.
+- Choose light, dark, or system appearance; prompt before conversion, convert immediately, or require Alt / Option; exclude sites or pause the current one from the toolbar, and optionally keep local history.
 
 Rate queries stay inside the extension. A source-attribution link is optional; you never need to visit a provider website just to see an available quote.
 
@@ -40,13 +41,13 @@ For a permanent app, install full Xcode and run `zsh scripts/package-safari.sh` 
 ## Your first conversion
 
 1. Choose your home currency in **Settings → Preferences**. New English installations start with USD; Chinese installations start with CNY. Existing preferences are preserved.
-2. Select a complete price on a regular webpage and click **Convert to …**. Change either currency if a symbol was ambiguous.
+2. Select a complete price on a regular webpage and click **Convert to …**. Change either currency if a symbol was ambiguous. Prices already in your home currency do not prompt; the context menu and shortcut convert them into your first watched currency instead.
 3. Open **Compare** for transfer estimates or **Cards** for Visa / Mastercard rates, dates, and issuer fees.
 4. Use **Settings → Guide → Open the practice page** to try selection without a local development server.
 
 `$` defaults to USD and `¥` to JPY, with an editable assumption notice. The parser supports ISO codes, common symbols, Chinese currency names, decimal conventions, Indian digit grouping, Arabic digits, and k/m or Chinese multipliers. Plain-number recognition is off by default. Inputs, editable areas, ordinary text, dates, ranges, and multiple prices do not trigger automatic conversion.
 
-The shortcut is **Alt / Option + Shift + C**. You can also right-click selected text. Browser settings pages, extension stores, other extension pages, and built-in PDF viewers restrict content scripts; use the toolbar converter there.
+The shortcut is **Alt / Option + Shift + C**; Preferences and the guide show the shortcut your browser actually assigned and link to its shortcut settings. You can also right-click selected text. Browser settings pages, extension stores, other extension pages, and built-in PDF viewers restrict content scripts; use the toolbar converter there.
 
 ## Know what each rate means
 
@@ -97,7 +98,7 @@ pnpm test:webkit
 pnpm test:payments
 ```
 
-Unit tests and `test:i18n` are deterministic. Bilingual browser tests use explicitly mocked provider responses and a separate temporary Chromium profile. They cover language detection and persistence, cross-page updates, currency search, card fees and stale states, bank filters, history export, real mouse selection, and responsive layouts.
+Unit tests and `test:i18n` are deterministic. Bilingual browser tests use explicitly mocked provider responses and a separate temporary Chromium profile. They cover language detection and persistence, cross-page updates, keyboard currency search, amount shorthands, remembered conversions, card fees, cheaper-card and best-route markers, stale states, bank filters, history export, real mouse selection including home-currency prices, and responsive layouts.
 
 Live integration tests use real public providers and may fail when providers change or deny requests. Card integration checks use an ordinary visible Chromium browser because official calculators may reject headless clients. Tests never import a personal browser profile or cookies. GitHub Actions runs unit tests, builds both packages, and runs deterministic bilingual extension tests.
 

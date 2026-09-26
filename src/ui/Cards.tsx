@@ -3,11 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, Check, Copy, CreditCard, RefreshCw } from 'lucide-react';
 import { rpc } from '../core/client';
 import { CARD_LABELS, today } from '../core/payments';
-import { parseNumber } from '../core/parser';
+import { parseAmount, parseNumber } from '../core/parser';
 import type { CardNetwork, CardQuote, Settings } from '../core/types';
-import { formatAmount, formatRate } from '../data/currencies';
-import { CurrencyPicker, ErrorBox, IconButton, Loading } from './shared';
-import type { ConvertState } from './Converter';
+import { decimals, formatAmount, formatRate } from '../data/currencies';
+import {
+  CurrencyPicker,
+  ErrorBox,
+  IconButton,
+  Loading,
+  usePricePaste,
+  type ConvertState,
+} from './shared';
 
 export function Cards({
   value,
@@ -28,8 +34,9 @@ export function Cards({
     [busy, setBusy] = useState<CardNetwork[]>([]),
     [copied, setCopied] = useState('');
   const serial = useRef(0),
-    amount = parseNumber(value.amount),
+    amount = parseAmount(value.amount),
     bankFee = parseNumber(fee);
+  const onPaste = usePricePaste(value, setValue);
   const invalid =
     amount === null || amount <= 0 || amount > 1e8
       ? '交易金额应大于 0 且不超过 1 亿'
@@ -67,6 +74,22 @@ export function Cards({
       serial.current++;
     };
   }, [value.from, value.to, amount, bankFee, date, revision, invalid]);
+  // Compare only bills from the same publication date and the same request.
+  const pair =
+    results.visa &&
+    results.mastercard &&
+    results.visa.rateDate === results.mastercard.rateDate &&
+    !results.visa.stale &&
+    !results.mastercard.stale
+      ? ([results.visa, results.mastercard] as const)
+      : null;
+  const gap = pair ? Math.abs(pair[0].total - pair[1].total) : 0;
+  const cheaper =
+    pair && gap >= 10 ** -decimals(value.to) / 2
+      ? pair[0].total < pair[1].total
+        ? pair[0]
+        : pair[1]
+      : null;
   async function copy(q: CardQuote) {
     try {
       await navigator.clipboard.writeText(
@@ -107,6 +130,7 @@ export function Cards({
             value={value.amount}
             maxLength={40}
             onChange={(e) => setValue({ ...value, amount: e.target.value })}
+            onPaste={onPaste}
           />
         </label>
         <div className="card-currencies">
@@ -201,6 +225,9 @@ export function Cards({
                       </>
                     )}
                   </b>
+                  {cheaper?.network === network ? (
+                    <span className="best-badge">{t('更省')}</span>
+                  ) : null}
                   <span>{t('官方公布价')}</span>
                   {q ? (
                     <IconButton
@@ -267,13 +294,18 @@ export function Cards({
         </div>
       )}
       {results.visa && results.mastercard ? (
-        <p className="card-difference">
+        <p className="card-difference" role="status">
           {results.visa.rateDate !== results.mastercard.rateDate
             ? t('两家公布日期不同，已分别标明。')
-            : t('相同交易条件，预计账单相差 {0} {1}。', [
-                formatAmount(Math.abs(results.visa.total - results.mastercard.total), value.to),
-                value.to,
-              ])}
+            : !pair
+              ? t('其中一家为上次缓存报价，暂不比较。')
+              : cheaper
+                ? t('{0} 预计少扣 {1} {2}。', [
+                    CARD_LABELS[cheaper.network],
+                    formatAmount(gap, value.to),
+                    value.to,
+                  ])
+                : t('两家预计账单相同。')}
         </p>
       ) : null}
       <details className="inline-info">

@@ -1,8 +1,15 @@
 import css from './style.css';
 import { t, setLanguage, getLanguage, getLocale } from '../i18n';
 import { parseMoney } from '../core/parser';
-import { ext, siteBlocked } from '../core/storage';
-import { currencies, currencyName, formatAmount, formatRate } from '../data/currencies';
+import { ext, otherCurrency, siteBlocked } from '../core/storage';
+import {
+  currencies,
+  currencyCodes,
+  currencyName,
+  flag,
+  formatAmount,
+  formatRate,
+} from '../data/currencies';
 import { DEFAULTS, type Settings, type ParsedMoney, type Quote } from '../core/types';
 const api = ext!;
 let settings: Settings = DEFAULTS;
@@ -11,6 +18,9 @@ let host: HTMLElement | null = null,
   box: HTMLElement | null = null;
 let selected: ParsedMoney | null = null;
 let anchor = { x: 16, y: 16, bottom: 30 };
+// The selected text, so the popup can follow it while the page scrolls.
+let anchorRange: Range | null = null,
+  followFrame = 0;
 let requestId = 0,
   selectionTimer: ReturnType<typeof setTimeout> | undefined;
 let lastText = '',
@@ -51,7 +61,9 @@ async function rpc<T = any>(message: Record<string, unknown>): Promise<T> {
     throw e;
   }
 }
-void rpc<Settings>({ type: 'settings' })
+// Selections made while preferences are still loading wait for them, so the first
+// prompt already uses the saved home currency and language.
+const ready = rpc<Settings>({ type: 'settings' })
   .then((s) => {
     settings = s;
     setLanguage(s.language || 'system');
@@ -76,6 +88,7 @@ function hide() {
   box = null;
   selected = null;
   current = null;
+  anchorRange = null;
   lastText = '';
 }
 function mount() {
@@ -130,16 +143,41 @@ function button(label: string, name: string, action: () => void, className = 'ic
   return b;
 }
 function currencySelect(value: string, label: string, change: (v: string) => void) {
+  const field = el('label', 'currency');
+  const mark = el('span', 'flag');
+  mark.textContent = flag(value);
+  mark.setAttribute('aria-hidden', 'true');
   const s = el('select');
   s.setAttribute('aria-label', t(label));
-  for (const c of currencies) {
-    const o = el('option', '', `${c.flag} ${c.code} · ${currencyName(c.code)}`);
-    o.value = c.code;
-    s.append(o);
-  }
+  // Options start with the ISO code so typing “E” or “HK” jumps through the list.
+  const group = (title: string, codes: string[]) => {
+    const g = document.createElement('optgroup');
+    g.label = t(title);
+    for (const code of codes) {
+      const o = document.createElement('option');
+      o.value = code;
+      o.textContent = `${code} · ${currencyName(code)}`;
+      g.append(o);
+    }
+    return g;
+  };
+  const frequent = [...new Set([value, from, to, settings.target, ...settings.favorites])].filter(
+    (c) => currencyCodes.has(c),
+  );
+  s.append(
+    group('常用', frequent),
+    group(
+      '全部币种',
+      currencies.map((c) => c.code),
+    ),
+  );
   s.value = value;
-  s.addEventListener('change', () => change(s.value));
-  return s;
+  s.addEventListener('change', () => {
+    mark.textContent = flag(s.value);
+    change(s.value);
+  });
+  field.append(mark, s);
+  return field;
 }
 function panel(focus = false) {
   if (!selected) return;
@@ -294,18 +332,25 @@ function capture(force = false, text?: string) {
   if (!raw || (!force && raw === lastText)) return;
   if (host && s?.anchorNode && host.shadowRoot?.contains(s.anchorNode)) return;
   const money = parseMoney(raw, settings);
-  if (!money) {
+  // A price already in the home currency needs no prompt; the context menu and shortcut still work.
+  if (!money || (!force && money.currency === settings.target)) {
     hide();
     return;
   }
+  anchorRange = null;
   if (s?.rangeCount) {
-    const r = s.getRangeAt(0).getBoundingClientRect();
-    if (r.width || r.height) anchor = { x: r.left, y: r.top, bottom: r.bottom };
+    const range = s.getRangeAt(0);
+    const r = range.getBoundingClientRect();
+    if (r.width || r.height) {
+      anchor = { x: r.left, y: r.top, bottom: r.bottom };
+      anchorRange = range.cloneRange();
+    }
   }
   lastText = raw;
   selected = money;
   from = money.currency;
-  to = settings.target;
+  // Explicit requests for a home-currency price convert it into another currency.
+  to = from === settings.target ? otherCurrency(from, settings) : settings.target;
   if (force || settings.mode !== 'prompt') {
     mount();
     panel(force);
@@ -319,7 +364,7 @@ document.addEventListener(
     lastAlt = e.altKey;
     anchor = { x: e.clientX, y: e.clientY, bottom: e.clientY };
     clearTimeout(selectionTimer);
-    selectionTimer = setTimeout(() => capture(), 40);
+    selectionTimer = setTimeout(() => void ready.then(() => capture()), 40);
   },
   true,
 );
@@ -333,7 +378,7 @@ document.addEventListener(
     lastAlt = e.altKey;
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
       clearTimeout(selectionTimer);
-      selectionTimer = setTimeout(() => capture(), 40);
+      selectionTimer = setTimeout(() => void ready.then(() => capture()), 40);
     }
   },
   true,
@@ -368,14 +413,40 @@ document.addEventListener(
   },
   true,
 );
+// Keep the popup next to the selection while the page or an ancestor scrolls; close it
+// once the selection leaves the viewport. Unrelated scrollers, such as carousels, leave it alone.
+function follow() {
+  followFrame = 0;
+  if (!host) return;
+  const r = anchorRange?.getBoundingClientRect();
+  if (
+    !r ||
+    (!r.width && !r.height) ||
+    r.bottom < 0 ||
+    r.top > innerHeight ||
+    r.right < 0 ||
+    r.left > innerWidth
+  ) {
+    hide();
+    return;
+  }
+  anchor = { x: r.left, y: r.top, bottom: r.bottom };
+  position();
+}
+function scheduleFollow() {
+  if (host && !followFrame) followFrame = requestAnimationFrame(follow);
+}
 document.addEventListener(
   'scroll',
   (e) => {
-    if (host && !e.composedPath().includes(host)) hide();
+    if (host && !e.composedPath().includes(host)) scheduleFollow();
   },
   { capture: true, passive: true },
 );
-window.addEventListener('resize', hide, { passive: true });
-api.runtime.onMessage.addListener((message) => {
-  if (message.type === 'convertSelection') capture(true, message.text);
+window.addEventListener('resize', scheduleFollow, { passive: true });
+api.runtime.onMessage.addListener((message, _sender, reply) => {
+  if (message?.type === 'convertSelection') void ready.then(() => capture(true, message.text));
+  // The toolbar popup asks the top frame which site it is on, to offer pausing it there.
+  else if (message?.type === 'siteInfo' && window === window.top)
+    reply({ host: location.host, protocol: location.protocol });
 });

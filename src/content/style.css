@@ -147,27 +147,50 @@ svg {
   gap: 8px;
   margin: 0 0 12px;
 }
-.pair select {
+.pair .currency {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  padding-left: 8px;
   background: var(--bg);
-  padding: 9px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  min-width: 0;
+}
+.pair .currency:focus-within {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.pair .flag {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+  font-size: 15px;
+  line-height: 1;
+}
+.pair select {
   flex: 1;
-  font-size: 12px;
   width: 0;
+  min-width: 0;
+  padding: 9px 4px 9px 0;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+}
+.pair select:focus-visible {
+  outline: none;
 }
 .pair > span {
   color: var(--muted);
 }
 .hint {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   margin: 0 0 10px;
   line-height: 1.7;
 }
 .meta {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   display: flex;
   justify-content: space-between;
@@ -185,7 +208,7 @@ svg {
   margin: 0 0 6px;
 }
 .notice {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   line-height: 1.65;
   margin-top: 7px;

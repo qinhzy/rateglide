@@ -13,7 +13,7 @@ const extension = path.resolve('release/chromium');
 const server = createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(
-    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="price">US$ 129.00</p><p>Ordinary text is not a price.</p></body></html>',
+    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="home">US$ 129.00</p><p id="price">€ 129.00</p><p>Ordinary text is not a price.</p><div id="wide" style="width:600px;overflow-x:auto"><div style="width:2400px"><span id="wide-price">€ 42.00</span></div></div></body></html>',
   );
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -215,6 +215,13 @@ try {
   await fits(page, 400, 'English popup fits 400px');
   await page.screenshot({ path: path.join(out, 'english-converter.png'), animations: 'disabled' });
   await page.getByLabel('From currency', { exact: true }).click();
+  await page.getByLabel('Search currencies', { exact: true }).fill('japan');
+  await page.getByLabel('Search currencies', { exact: true }).press('Enter');
+  check(
+    'currency search ranks country names and accepts Enter',
+    (await page.getByLabel('From currency', { exact: true }).innerText()).includes('JPY'),
+  );
+  await page.getByLabel('From currency', { exact: true }).click();
   await page.getByLabel('Search currencies', { exact: true }).fill('Canadian');
   await page.locator('.currency-option').filter({ hasText: 'CAD' }).click();
   check(
@@ -226,20 +233,36 @@ try {
   );
   await page.getByLabel('Amount to convert', { exact: true }).fill('invalid');
   await page
-    .getByText('Enter a valid amount, such as 1,000.50 or 1.000,50.', { exact: true })
+    .getByText('Enter a valid amount, such as 1,000.50, 1.000,50, or 2.5k.', { exact: true })
     .waitFor();
   check('invalid amount feedback translated');
+  await page.getByLabel('Amount to convert', { exact: true }).fill('2.5k');
+  await page
+    .getByLabel('Conversion result', { exact: true })
+    .filter({ hasText: '1,785.71' })
+    .waitFor();
+  check('amount shorthand converts 2.5k');
   await page.getByLabel('Amount to convert', { exact: true }).fill('100');
   await page.getByLabel('Language', { exact: true }).selectOption('zh-CN');
-  await page.getByRole('button', { name: '刷卡', exact: true }).waitFor();
+  await page.getByRole('tab', { name: '刷卡', exact: true }).waitFor();
   check('manual Chinese override updates immediately');
   await page.reload();
-  await page.getByRole('button', { name: '换算', exact: true }).waitFor();
+  await page.getByRole('tab', { name: '换算', exact: true }).waitFor();
   check('language override survives reload');
+  check(
+    'the last conversion is remembered',
+    (await page.getByLabel('兑换金额', { exact: true }).inputValue()) === '100' &&
+      (await page.getByLabel('原币种', { exact: true }).innerText()).includes('CAD'),
+  );
   await page.getByLabel('界面语言', { exact: true }).selectOption('en');
-  await page.getByRole('button', { name: 'Cards', exact: true }).click();
+  await page.getByRole('tab', { name: 'Cards', exact: true }).click();
   await page.getByLabel('Visa estimated bill', { exact: true }).waitFor();
   await page.getByLabel('Mastercard estimated bill', { exact: true }).waitFor();
+  check(
+    'the cheaper card is identified',
+    (await page.locator('[data-network="visa"] .best-badge').innerText()) === 'Lower' &&
+      (await page.locator('.card-difference').innerText()).startsWith('Visa is estimated to cost'),
+  );
   await noHan(page, 'English cards, fee labels and dates');
   await page.screenshot({ path: path.join(out, 'english-cards.png'), animations: 'disabled' });
   await page.getByLabel('Bank fee', { exact: true }).fill('1.5');
@@ -270,6 +293,25 @@ try {
   await page.goto(base + 'popup.html?popup=1&tab=compare&from=GBP&to=EUR&amount=1000');
   await page.locator('.compare-row').first().waitFor();
   await page.locator('.revolut-result').waitFor();
+  check(
+    'the route with the most received is marked',
+    (await page.locator('.compare-row').first().locator('.best-badge').innerText()) ===
+      'Most received' &&
+      (await page.locator('.shortfall').count()) ===
+        (await page.locator('.compare-row').count()) - 1,
+  );
+  check(
+    'transfer estimates come before the Revolut exchange quote',
+    await page.evaluate(
+      () =>
+        !!(
+          document
+            .querySelector('.quote-list')
+            .compareDocumentPosition(document.querySelector('.revolut-panel')) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+    ),
+  );
   await noHan(page, 'English comparison, Revolut and source notices');
   await page.getByRole('button', { name: 'Banks', exact: true }).click();
   check(
@@ -279,17 +321,17 @@ try {
   );
   await page.getByRole('button', { name: 'Regions', exact: true }).click();
   await noHan(page, 'English region filters');
-  await page.getByRole('button', { name: 'Watchlist', exact: true }).click();
+  await page.getByRole('tab', { name: 'Watchlist', exact: true }).click();
   await page.locator('.watch-row').first().waitFor();
   await noHan(page, 'English watchlist and currency names');
   const settings = await context.newPage();
   await settings.goto(base + 'options.html');
   await settings.getByLabel('Language', { exact: true }).waitFor();
   await settings.getByLabel('Language', { exact: true }).selectOption('zh-CN');
-  await page.getByRole('button', { name: '关注', exact: true }).waitFor();
+  await page.getByRole('tab', { name: '关注', exact: true }).waitFor();
   check('language syncs across open extension pages');
   await settings.getByLabel('界面语言', { exact: true }).selectOption('en');
-  await page.getByRole('button', { name: 'Watchlist', exact: true }).waitFor();
+  await page.getByRole('tab', { name: 'Watchlist', exact: true }).waitFor();
   for (const width of [375, 620, 768, 1280]) {
     await settings.setViewportSize({ width, height: 900 });
     await fits(settings, width, `English preferences fit ${width}px`);
@@ -333,17 +375,40 @@ try {
     'English CSV uses international filename',
     download.suggestedFilename() === 'RateGlide-history.csv',
   );
+  await settings.goto(base + 'options.html#not-a-section');
+  await settings
+    .locator('nav button[aria-current="page"]')
+    .filter({ hasText: 'Preferences' })
+    .waitFor();
+  check('unknown settings sections fall back to Preferences');
+  const { version } = JSON.parse(await fs.readFile('package.json', 'utf8'));
+  check(
+    'settings show the packaged version',
+    (await settings.locator('.sidebar-footer span').innerText()) === `RateGlide · v${version}`,
+  );
   const practice = await context.newPage();
   await practice.setViewportSize({ width: 1100, height: 700 });
   await practice.goto(origin);
-  const box = await practice.locator('#price').boundingBox();
-  await practice.mouse.move(box.x, box.y + box.height / 2);
-  await practice.mouse.down();
-  await practice.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 18 });
-  await practice.mouse.up();
+  const dragSelect = async (selector) => {
+    const box = await practice.locator(selector).boundingBox();
+    await practice.mouse.move(box.x, box.y + box.height / 2);
+    await practice.mouse.down();
+    await practice.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 18 });
+    await practice.mouse.up();
+  };
+  await dragSelect('#home');
+  await practice.waitForTimeout(400);
+  check(
+    'a price already in the home currency stays quiet',
+    (await practice.locator('huijian-helper button').count()) === 0,
+  );
+  await dragSelect('#price');
   await practice.getByRole('button', { name: 'Convert to USD', exact: true }).waitFor();
   await practice.getByRole('button', { name: 'Convert to USD', exact: true }).click();
-  await practice.locator('huijian-helper .result').filter({ hasText: /129/ }).waitFor();
+  await practice
+    .locator('huijian-helper .result')
+    .filter({ hasText: /143\.33/ })
+    .waitFor();
   check('true mouse selection uses saved English language');
   check(
     'English selection currency labels',
@@ -358,6 +423,14 @@ try {
     path: path.join(out, 'english-selection.png'),
     animations: 'disabled',
   });
+  await practice.keyboard.press('Escape');
+  await dragSelect('#wide-price');
+  await practice.getByRole('button', { name: 'Convert to USD', exact: true }).waitFor();
+  await practice.locator('#wide').evaluate((el) => (el.scrollLeft = 1200));
+  await practice.waitForFunction(() => !document.querySelector('huijian-helper'), null, {
+    timeout: 5000,
+  });
+  check('popup closes when horizontal scrolling moves the selection out of view');
   await practice.keyboard.press('Escape');
   await practice.goto(base + 'practice.html');
   await practice

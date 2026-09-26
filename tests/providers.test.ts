@@ -7,7 +7,7 @@ import {
   parseComparison,
   validateQuote,
 } from '../src/core/providers';
-import { cleanSettings, siteBlocked } from '../src/core/storage';
+import { cleanSettings, otherCurrency, siteBlocked } from '../src/core/storage';
 const table = {
   USD: { buy: 7.1, sell: 7.2, cashBuy: 7, cashSell: 7.3, asOf: Date.now() },
   JPY: { buy: 0.048, sell: 0.051, cashBuy: 0.04, cashSell: 0.052, asOf: Date.now() },
@@ -131,4 +131,10 @@ test('settings are validated and bounded', () => {
 test('block domains include subdomains but not suffix-lookalikes', () => {
   assert.equal(siteBlocked('store.example.com', ['example.com']), true);
   assert.equal(siteBlocked('notexample.com', ['example.com']), false);
+});
+test('a home-currency price converts into the first watched currency', () => {
+  const settings = cleanSettings({ target: 'USD', favorites: ['USD', 'GBP', 'EUR'] });
+  assert.equal(otherCurrency('USD', settings), 'GBP');
+  assert.equal(otherCurrency('EUR', settings), 'USD');
+  assert.equal(otherCurrency('USD', cleanSettings({ target: 'USD', favorites: [] })), 'EUR');
 });
