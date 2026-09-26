@@ -13,7 +13,7 @@ const extension = path.resolve('release/chromium');
 const server = createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(
-    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="price">US$ 129.00</p><p>Ordinary text is not a price.</p></body></html>',
+    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="home">US$ 129.00</p><p id="price">€ 129.00</p><p>Ordinary text is not a price.</p></body></html>',
   );
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -336,14 +336,26 @@ try {
   const practice = await context.newPage();
   await practice.setViewportSize({ width: 1100, height: 700 });
   await practice.goto(origin);
-  const box = await practice.locator('#price').boundingBox();
-  await practice.mouse.move(box.x, box.y + box.height / 2);
-  await practice.mouse.down();
-  await practice.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 18 });
-  await practice.mouse.up();
+  const dragSelect = async (selector) => {
+    const box = await practice.locator(selector).boundingBox();
+    await practice.mouse.move(box.x, box.y + box.height / 2);
+    await practice.mouse.down();
+    await practice.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 18 });
+    await practice.mouse.up();
+  };
+  await dragSelect('#home');
+  await practice.waitForTimeout(400);
+  check(
+    'a price already in the home currency stays quiet',
+    (await practice.locator('huijian-helper button').count()) === 0,
+  );
+  await dragSelect('#price');
   await practice.getByRole('button', { name: 'Convert to USD', exact: true }).waitFor();
   await practice.getByRole('button', { name: 'Convert to USD', exact: true }).click();
-  await practice.locator('huijian-helper .result').filter({ hasText: /129/ }).waitFor();
+  await practice
+    .locator('huijian-helper .result')
+    .filter({ hasText: /143\.33/ })
+    .waitFor();
   check('true mouse selection uses saved English language');
   check(
     'English selection currency labels',
