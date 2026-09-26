@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Currency search ranks exact and partial codes first and also matches country or region names and everyday Chinese names (加元, 美金, 台币). The current, home and watched currencies are listed first, and the list works with Arrow keys and Enter.
+- Amount fields accept `2.5k`, `1bn`, `1.2万` and similar shorthands; pasting a price such as `€ 1.234,56` fills in the amount and currency.
+- The toolbar popup focuses the amount on open, remembers the last conversion, follows home-currency changes, shows the inverse rate, and resets each tab to its top. Its tabs use tablist semantics with Arrow, Home and End keys.
+- Comparisons list transfer estimates first, mark the route with the most received and show how much less other routes deliver. Card rates say which network is estimated to cost less.
+- Selection conversion stays quiet for prices already in the home currency; the context menu and shortcut convert those into the first watched currency. The popup follows the selection while the page scrolls, waits for saved preferences, and its currency menus support type-ahead with a frequent group.
+- Pause or resume selection conversion for the current site from the toolbar popup.
+- Settings show the browser's actual shortcut with a link to change it, validate section links, read the version from the package, ask before clearing history, and can enable history in place.
+- When automatic mode cannot reach Wise and the daily fallback lacks the currency, the error names Wise first.
+- Raise the smallest text sizes, improve Visa contrast in dark mode, and remove unused styles.
+
 ## 1.2.0 — 2026-09-08
 
 - Introduce **RateGlide · 汇见** and the English tagline **Currency at your cursor**.
