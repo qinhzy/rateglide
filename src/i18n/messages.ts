@@ -168,7 +168,13 @@ export const english: Record<string, string> = {
     'By default, a small prompt appears before any rate request.',
   选中后提示: 'Ask before converting',
   选中后直接换算: 'Convert immediately',
-  '按住 Option 再选中': 'Only while holding Alt / Option',
+  '按住 Alt / Option 再选中': 'Only while holding Alt / Option',
+  快捷键: 'Keyboard shortcut',
+  '选中文字后按下即可换算，也适用于已是目标货币的价格':
+    'Converts the selected text, including prices already in your home currency.',
+  未设置: 'Not set',
+  修改: 'Change',
+  当前快捷键: 'Current shortcut',
   识别纯数字: 'Recognize plain numbers',
   '无货币符号时也提示；可能把普通数字识别为金额':
     'Also prompt for numbers without currency symbols. May detect non-price numbers.',
@@ -206,8 +212,8 @@ export const english: Record<string, string> = {
   '一次选中，少一次心算': 'One selection. Less mental math.',
   '在普通网页上，用鼠标选中一笔完整价格，例如':
     'On a regular webpage, select a complete price such as ',
-  '，点击「换算为 CNY」即可。按 Escape 或点击空白处关闭浮层。':
-    ', then click the conversion prompt. Press Escape or click outside to dismiss it.',
+  '，点击「换算为 {0}」即可。按 Escape 或点击空白处关闭浮层。':
+    ', then click “Convert to {0}”. Press Escape or click outside to dismiss it.',
   '2.5万日元': 'JPY 25,000',
   '上方为格式示例。练习页专门启用了划词功能，安装后可直接体验，无需启动本地服务。':
     'These are format examples. The built-in practice page works immediately after installation, with no local server.',
@@ -220,11 +226,11 @@ export const english: Record<string, string> = {
   '同一符号可能代表不同货币。默认 $ 为美元、¥ 为日元，提示中会标明；可在浮层或设置里更改。':
     'Symbols can refer to more than one currency. By default, $ means USD and ¥ means JPY. The assumption is shown and can be changed in the popup or settings.',
   不想每次点击提示: 'Skip the prompt',
-  '在偏好设置切换到「选中后直接换算」，或仅在按住 Option 选中时触发。':
+  '在偏好设置切换到「选中后直接换算」，或仅在按住 Alt / Option 选中时触发。':
     'In Preferences, choose Convert immediately, or trigger conversion only while holding Alt / Option.',
   快捷键与右键: 'Keyboard and context menu',
-  '右键选中文字 → 用汇见换算；默认快捷键 Option + Shift + C（浏览器有冲突时可在扩展快捷键管理中修改）。':
-    'Right-click selected text and choose Convert with RateGlide. The default shortcut is Alt / Option + Shift + C; change it in your browser’s extension shortcuts if it conflicts.',
+  '右键选中文字 → 用 RateGlide 换算；默认快捷键 Alt / Option + Shift + C（浏览器有冲突时可在扩展快捷键管理中修改）。已是目标货币的价格不会自动提示，可用这两种方式换算。':
+    'Right-click selected text and choose Convert with RateGlide. The default shortcut is Alt / Option + Shift + C; change it in your browser’s extension shortcuts if it conflicts. Prices already in your home currency do not prompt automatically; use either option to convert them.',
   报价为什么不同: 'Why rates differ',
   '中间价没有扣除费用。银行现汇买入／卖出是两个方向；平台到账价还受手续费、金额、国家、支付方式影响。':
     'Mid-market rates exclude fees. Bank buying and selling rates apply in different directions. Transfer estimates also depend on fees, amounts, countries, and payment methods.',
@@ -243,6 +249,9 @@ export const english: Record<string, string> = {
   只留在这台浏览器里: 'Only in this browser',
   导出: 'Export',
   清空: 'Clear',
+  '确认清空全部记录？': 'Clear all history?',
+  '当前未开启，复制换算结果不会保存': 'Off. Copied results are not saved.',
+  '复制一次换算结果，它会出现在这里。': 'Copy a conversion result and it will appear here.',
   '开启记录后，每次主动复制换算结果会保存一条。最多 50 条，不保存网页地址或选中原文。':
     'When enabled, copying a result saves a conversion. Up to 50 entries are kept, without page URLs or selected text.',
   还没有保存的换算: 'No saved conversions yet',
@@ -507,6 +516,9 @@ export const english: Record<string, string> = {
   韩元: 'South Korean won',
   泰铢: 'Thai baht',
   '安静，也是一种体验': 'Quiet when it should be.',
+  '已是目标货币的价格也不会提示，可用右键菜单或快捷键换算。':
+    'Prices already in your home currency stay quiet too; use the context menu or shortcut to convert them.',
+  '目标货币 · 不提示': 'Home currency · stays quiet',
   '这是一段普通文字，选中后不应该出现换算提示。':
     'Selecting this ordinary sentence should not trigger a conversion prompt.',
   '输入框中的金额不会触发划词，避免打扰编辑：':

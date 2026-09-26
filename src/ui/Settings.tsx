@@ -15,21 +15,61 @@ import {
   X,
 } from 'lucide-react';
 import { rpc } from '../core/client';
+import { ext } from '../core/storage';
 import { SOURCE_LABELS } from '../core/providers';
-import { formatAmount, formatRate } from '../data/currencies';
-import { countries, directory } from '../data/directory';
+import { formatAmount } from '../data/currencies';
 import type { HistoryEntry, Settings as Prefs, Source } from '../core/types';
 import {
   Brand,
   CurrencyPicker,
   ErrorBox,
-  External,
   IconButton,
   Toggle,
   timeLabel,
   LanguagePicker,
 } from './shared';
 import { Sources } from './Sources';
+const TABS = ['preferences', 'sources', 'guide', 'history'] as const;
+type SettingsTab = (typeof TABS)[number];
+function tabFromHash(): SettingsTab {
+  const hash = location.hash.replace('#', '');
+  return TABS.find((tab) => tab === hash) ?? 'preferences';
+}
+/** The browser's current shortcut for converting a selection; null when it cannot be read. */
+function useShortcut() {
+  const [shortcut, setShortcut] = useState<string | null>(null);
+  useEffect(() => {
+    ext?.commands
+      ?.getAll?.()
+      .then((commands) =>
+        setShortcut(commands.find((c) => c.name === 'convert-selection')?.shortcut ?? ''),
+      )
+      .catch(() => {});
+  }, []);
+  return shortcut;
+}
+// Chromium browsers list extension shortcuts on an internal page that extensions may open.
+const shortcutPage = /Edg\//.test(navigator.userAgent)
+  ? 'edge://extensions/shortcuts'
+  : /Chrome\//.test(navigator.userAgent)
+    ? 'chrome://extensions/shortcuts'
+    : '';
+function ShortcutControl({ shortcut }: { shortcut: string }) {
+  return (
+    <div className="shortcut-control">
+      {shortcut ? <kbd>{shortcut}</kbd> : <span>{t('未设置')}</span>}
+      {ext && shortcutPage ? (
+        <button
+          type="button"
+          className="text-button"
+          onClick={() => void ext!.tabs.create({ url: shortcutPage })}
+        >
+          {t('修改')}
+        </button>
+      ) : null}
+    </div>
+  );
+}
 function SettingRow({
   title,
   description,
@@ -56,9 +96,15 @@ export function Settings({
   settings: Prefs;
   save: (s: Partial<Prefs>) => Promise<void>;
 }) {
-  const [tab, setTab] = useState(location.hash.replace('#', '') || 'preferences'),
+  const [tab, setTab] = useState(tabFromHash),
     [saved, setSaved] = useState(false),
     [error, setError] = useState('');
+  const shortcut = useShortcut();
+  useEffect(() => {
+    const sync = () => setTab(tabFromHash());
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
   async function update(p: Partial<Prefs>) {
     try {
       await save(p);
@@ -73,7 +119,7 @@ export function Settings({
     ['sources', '数据来源', Database],
     ['guide', '使用指南', BookOpen],
     ['history', '本地历史', History],
-  ] as const;
+  ] as const satisfies readonly (readonly [SettingsTab, string, unknown])[];
   return (
     <div className="settings-layout">
       <aside>
@@ -83,6 +129,7 @@ export function Settings({
             <button
               key={id}
               className={tab === id ? 'active' : ''}
+              aria-current={tab === id ? 'page' : undefined}
               onClick={() => {
                 setTab(id);
                 history.replaceState(null, '', '#' + id);
@@ -100,7 +147,7 @@ export function Settings({
             <br />
             {t('更贴近你。')}
           </p>
-          <span>RateGlide · v1.2.0</span>
+          <span>RateGlide · v{__APP_VERSION__}</span>
         </div>
       </aside>
       <main className="settings-main">
@@ -197,9 +244,17 @@ export function Settings({
                   >
                     <option value="prompt">{t('选中后提示')}</option>
                     <option value="instant">{t('选中后直接换算')}</option>
-                    <option value="alt">{t('按住 Option 再选中')}</option>
+                    <option value="alt">{t('按住 Alt / Option 再选中')}</option>
                   </select>
                 </SettingRow>
+                {shortcut !== null ? (
+                  <SettingRow
+                    title={t('快捷键')}
+                    description={t('选中文字后按下即可换算，也适用于已是目标货币的价格')}
+                  >
+                    <ShortcutControl shortcut={shortcut} />
+                  </SettingRow>
+                ) : null}
                 <SettingRow
                   title={t('识别纯数字')}
                   description={t('无货币符号时也提示；可能把普通数字识别为金额')}
@@ -259,9 +314,9 @@ export function Settings({
         ) : tab === 'sources' ? (
           <Sources settings={settings} save={update} />
         ) : tab === 'guide' ? (
-          <Guide />
+          <Guide target={settings.target} shortcut={shortcut} />
         ) : (
-          <LocalHistory />
+          <LocalHistory settings={settings} save={update} />
         )}
         <footer className="settings-footer">
           {t('汇见仅辅助查询与计算。实时中间价、银行牌价、参考价和最终到账价各自标明。')}
@@ -324,7 +379,9 @@ function BlockedSites({ settings, save }: { settings: Prefs; save: (s: Partial<P
     </section>
   );
 }
-function Guide() {
+function Guide({ target, shortcut }: { target: string; shortcut: string | null }) {
+  // Prices already in the home currency stay quiet, so the example uses another currency.
+  const example = target === 'USD' ? '€129.00' : '$129.00';
   return (
     <>
       <section className="settings-section guide-intro">
@@ -332,8 +389,8 @@ function Guide() {
         <h2>{t('一次选中，少一次心算')}</h2>
         <p>
           {t('在普通网页上，用鼠标选中一笔完整价格，例如')}
-          <strong>$129.00</strong>
-          {t('，点击「换算为 CNY」即可。按 Escape 或点击空白处关闭浮层。')}
+          <strong>{example}</strong>
+          {t('，点击「换算为 {0}」即可。按 Escape 或点击空白处关闭浮层。', [target])}
         </p>
         <div className="practice-prices">
           <span>US$ 129.00</span>
@@ -363,11 +420,11 @@ function Guide() {
             ],
             [
               '不想每次点击提示',
-              '在偏好设置切换到「选中后直接换算」，或仅在按住 Option 选中时触发。',
+              '在偏好设置切换到「选中后直接换算」，或仅在按住 Alt / Option 选中时触发。',
             ],
             [
               '快捷键与右键',
-              '右键选中文字 → 用汇见换算；默认快捷键 Option + Shift + C（浏览器有冲突时可在扩展快捷键管理中修改）。',
+              '右键选中文字 → 用 RateGlide 换算；默认快捷键 Alt / Option + Shift + C（浏览器有冲突时可在扩展快捷键管理中修改）。已是目标货币的价格不会自动提示，可用这两种方式换算。',
             ],
             [
               '报价为什么不同',
@@ -393,6 +450,12 @@ function Guide() {
             <div key={title}>
               <h3>{t(title)}</h3>
               <p>{t(description)}</p>
+              {title === '快捷键与右键' && shortcut !== null ? (
+                <div className="guide-shortcut">
+                  <span>{t('当前快捷键')}</span>
+                  <ShortcutControl shortcut={shortcut} />
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
@@ -400,17 +463,36 @@ function Guide() {
     </>
   );
 }
-function LocalHistory() {
+function LocalHistory({
+  settings,
+  save,
+}: {
+  settings: Prefs;
+  save: (s: Partial<Prefs>) => Promise<void>;
+}) {
   const [items, setItems] = useState<HistoryEntry[]>([]),
-    [error, setError] = useState('');
+    [error, setError] = useState(''),
+    [confirming, setConfirming] = useState(false);
   useEffect(() => {
     rpc<HistoryEntry[]>({ type: 'history' })
       .then(setItems)
       .catch((e) => setError(e.message));
   }, []);
+  useEffect(() => {
+    // The confirmation expires, so a stray second click later cannot erase history.
+    if (!confirming) return;
+    const timer = setTimeout(() => setConfirming(false), 4000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
   async function clear() {
-    await rpc({ type: 'clearHistory' });
-    setItems([]);
+    try {
+      await rpc({ type: 'clearHistory' });
+      setItems([]);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setConfirming(false);
+    }
   }
   function exportCsv() {
     const content =
@@ -438,9 +520,13 @@ function LocalHistory() {
             <Download size={15} />
             {t('导出')}
           </button>
-          <button className="text-button" disabled={!items.length} onClick={clear}>
+          <button
+            className={'text-button ' + (confirming ? 'danger' : '')}
+            disabled={!items.length}
+            onClick={() => (confirming ? void clear() : setConfirming(true))}
+          >
             <Trash2 size={15} />
-            {t('清空')}
+            {t(confirming ? '确认清空全部记录？' : '清空')}
           </button>
         </div>
       </div>
@@ -448,6 +534,20 @@ function LocalHistory() {
         {t('开启记录后，每次主动复制换算结果会保存一条。最多 50 条，不保存网页地址或选中原文。')}
       </p>
       {error ? <ErrorBox message={error} /> : null}
+      {!settings.rememberHistory ? (
+        <div className="settings-group history-switch">
+          <SettingRow
+            title={t('记录已复制的换算')}
+            description={t('当前未开启，复制换算结果不会保存')}
+          >
+            <Toggle
+              checked={false}
+              label={t('记录换算历史')}
+              onChange={(rememberHistory) => void save({ rememberHistory })}
+            />
+          </SettingRow>
+        </div>
+      ) : null}
       {items.length ? (
         <div className="history-list">
           {items.map((i) => (
@@ -468,7 +568,13 @@ function LocalHistory() {
         <div className="empty">
           <History size={28} />
           <h3>{t('还没有保存的换算')}</h3>
-          <p>{t('在偏好设置中开启记录，然后复制一次换算结果。')}</p>
+          <p>
+            {t(
+              settings.rememberHistory
+                ? '复制一次换算结果，它会出现在这里。'
+                : '在偏好设置中开启记录，然后复制一次换算结果。',
+            )}
+          </p>
         </div>
       )}
     </section>

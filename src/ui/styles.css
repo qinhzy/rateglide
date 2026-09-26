@@ -1981,3 +1981,38 @@ html[lang='en'] .network-quote > header > span {
   margin: -12px 0 14px;
   text-align: right;
 }
+.shortcut-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.shortcut-control kbd {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--canvas);
+  white-space: nowrap;
+}
+.shortcut-control > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.guide-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.text-button.danger {
+  color: var(--error);
+}
+.history-switch {
+  margin-bottom: 16px;
+}

@@ -1,5 +1,6 @@
 import { getLanguage, setLanguage, t, type LanguagePreference } from './i18n';
 import { rpc } from './core/client';
+import { parseMoney } from './core/parser';
 import { ext } from './core/storage';
 import type { Settings } from './core/types';
 
@@ -47,6 +48,20 @@ function render(settings: Settings) {
   const input = document.querySelector('input');
   input?.setAttribute('aria-label', t('不会触发的输入框'));
   document.querySelector('[contenteditable]')?.setAttribute('aria-label', t('可编辑内容'));
+  markHomeCurrency(settings);
+}
+// Prices already in the home currency do not prompt, so label them instead of leaving
+// a first selection looking broken.
+function markHomeCurrency(settings: Settings) {
+  document.querySelectorAll('.home-tag').forEach((tag) => tag.remove());
+  for (const price of document.querySelectorAll<HTMLElement>('.price, td[id$="-format"]')) {
+    if (parseMoney(price.textContent || '', settings)?.currency !== settings.target) continue;
+    const tag = document.createElement('span');
+    tag.className = 'home-tag';
+    tag.textContent = t('目标货币 · 不提示');
+    if (price.matches('td')) price.nextElementSibling?.append(tag);
+    else price.after(tag);
+  }
 }
 select.addEventListener('change', async () => {
   try {
