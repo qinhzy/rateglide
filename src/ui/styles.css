@@ -1942,3 +1942,42 @@ html[lang='en'] .network-quote > header > span {
   background: none;
   text-decoration: underline;
 }
+.best-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.network-quote > header > .best-badge {
+  margin-left: 0;
+  color: var(--green);
+}
+.received .shortfall {
+  display: block;
+  margin-top: 2px;
+}
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  margin-left: 2px;
+  border-radius: 8px;
+  background: var(--green);
+  color: var(--on-green);
+  font-size: 10px;
+  font-weight: 600;
+}
+.add-note {
+  margin: -12px 0 14px;
+  text-align: right;
+}

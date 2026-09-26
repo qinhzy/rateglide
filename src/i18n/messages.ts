@@ -41,8 +41,11 @@ export const english: Record<string, string> = {
   '该日尚无新牌价，官方返回 {0} 的报价。':
     'No new rate for this date. The provider returned its {0} rate.',
   '两家公布日期不同，已分别标明。': 'The providers returned different rate dates, shown above.',
-  '相同交易条件，预计账单相差 {0} {1}。':
-    'For the same transaction, the estimated bills differ by {0} {1}.',
+  '{0} 预计少扣 {1} {2}。': '{0} is estimated to cost {1} {2} less.',
+  '两家预计账单相同。': 'Both estimated bills are the same.',
+  '其中一家为上次缓存报价，暂不比较。':
+    'One quote is a saved fallback, so the bills are not compared.',
+  更省: 'Lower',
   关于入账日期与费用: 'About billing dates and fees',
   '报价来自卡组织官方计算器，并非秒级市场中间价。授权日、处理日、退款以及发卡行政策可能影响最终入账；这里的银行附加费已计入一次。同币种计算仅作费用试算。商户或 ATM 的动态货币转换（DCC）可能不使用这两家卡组织的汇率。':
     'These are official card calculator rates. Authorization and processing dates, refunds, and issuer policies can affect your final bill. The bank fee is included once. Same-currency results are fee estimates. Merchant or ATM dynamic currency conversion (DCC) may use a different rate.',
@@ -80,6 +83,8 @@ export const english: Record<string, string> = {
     'Try another currency or region. Missing quotes are never replaced with a market rate.',
   '查看 GBP → EUR 路线': 'Try GBP → EUR',
   '{0} 组报价 · 各地区分别列出': '{0} quotes · Regions shown separately',
+  最多到账: 'Most received',
+  '少到账 {0}': '{0} less',
   '参考价，另行比较': 'Reference rates',
   '下列金额未扣费用，不能与上方预计到账直接排名。':
     'These amounts exclude fees and are separate from the transfer estimates above.',
@@ -295,6 +300,10 @@ export const english: Record<string, string> = {
   '取消关注 ': 'Unwatch ',
   添加关注币种: 'Currency to watch',
   添加关注: 'Add currency',
+  已在关注列表中: 'Already in your watchlist.',
+  这是目标货币: 'This is your home currency.',
+  '最多关注 20 种货币': 'You can watch up to 20 currencies.',
+  '在换算中打开 {0}': 'Open {0} in the converter',
   '连接失败 · 缓存': 'Offline · Cached',
   过期缓存: 'Stale cache',
   每日参考: 'Daily reference',

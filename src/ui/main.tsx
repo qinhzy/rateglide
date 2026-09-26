@@ -58,7 +58,8 @@ function App() {
     [tab, setTab] = useState<Tab>('convert'),
     [site, setSite] = useState('');
   const [value, setValue] = useState<ConvertState | null>(null);
-  const focusOnOpen = useRef(true);
+  const focusOnOpen = useRef(true),
+    panel = useRef<HTMLElement>(null);
   const isSettings = location.pathname.endsWith('options.html');
   useEffect(() => {
     rpc<Prefs>({ type: 'settings' })
@@ -96,6 +97,8 @@ function App() {
   }, [value, settings?.target]);
   useEffect(() => {
     if (settings && tab !== 'convert') focusOnOpen.current = false;
+    // Each tab starts at its top instead of inheriting the previous tab's scroll position.
+    panel.current?.scrollTo({ top: 0 });
   }, [tab, settings]);
   useEffect(() => {
     // Ask the page in the active tab for its host so selection can be paused there.
@@ -239,7 +242,7 @@ function App() {
             </button>
           ))}
         </div>
-        <main id="popup-panel" role="tabpanel" aria-labelledby={'tab-' + tab}>
+        <main id="popup-panel" role="tabpanel" aria-labelledby={'tab-' + tab} ref={panel}>
           {error ? <ErrorBox message={error} /> : null}
           {tab === 'convert' ? (
             <Converter

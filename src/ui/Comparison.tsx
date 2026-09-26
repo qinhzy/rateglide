@@ -1,15 +1,14 @@
 import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { RevolutPanel } from './RevolutPanel';
 import { rpc } from '../core/client';
 import { formatAmount, formatRate } from '../data/currencies';
-import { countries, directory } from '../data/directory';
+import { countries } from '../data/directory';
 import type { CompareRow, Quote } from '../core/types';
 import {
   CurrencyPicker,
   ErrorBox,
-  External,
   IconButton,
   Loading,
   timeLabel,
@@ -86,6 +85,8 @@ export function Comparison({
   const filtered = rows
     .filter((r) => !provider || r.name.toLowerCase().startsWith(provider.toLowerCase()))
     .filter((r) => filter === '全部' || r.type === filter);
+  const best = filtered[0]?.received;
+  const regions = [sourceCountry, targetCountry].filter(Boolean).length;
   return (
     <section className="comparison">
       <div className="section-heading">
@@ -125,7 +126,12 @@ export function Comparison({
       <div className="filter-row">
         <div className="mini-tabs">
           {['全部', '汇款平台', '银行'].map((f) => (
-            <button className={f === filter ? 'active' : ''} onClick={() => setFilter(f)} key={f}>
+            <button
+              className={f === filter ? 'active' : ''}
+              aria-pressed={f === filter}
+              onClick={() => setFilter(f)}
+              key={f}
+            >
               {t(f)}
             </button>
           ))}
@@ -137,6 +143,7 @@ export function Comparison({
         >
           <SlidersHorizontal size={14} />
           {t('地区')}
+          {regions ? <span className="count-badge">{regions}</span> : null}
         </button>
       </div>
       {filters ? (
@@ -161,7 +168,6 @@ export function Comparison({
           ))}
         </div>
       ) : null}
-      {!provider ? <RevolutPanel value={value} /> : null}
       <p className="comparison-note">
         {t('按预计到账排序 · 银行转账 → 银行账户')}
         <br />
@@ -180,7 +186,12 @@ export function Comparison({
                   {r.name.slice(0, 1)}
                 </div>
                 <div className="provider-title">
-                  <b>{r.name}</b>
+                  <b>
+                    {r.name}
+                    {i === 0 && filtered.length > 1 ? (
+                      <span className="best-badge">{t('最多到账')}</span>
+                    ) : null}
+                  </b>
                   <small>
                     {r.sourceCountry || t('未指定')} → {r.targetCountry || t('未指定')} ·{' '}
                     {timeLabel(r.collectedAt)}
@@ -192,6 +203,11 @@ export function Comparison({
                     {value.to}
                     {t('· 预计到账')}
                   </small>
+                  {i > 0 && best !== undefined && best - r.received >= 0.005 ? (
+                    <small className="shortfall">
+                      {t('少到账 {0}', [formatAmount(best - r.received, value.to)])}
+                    </small>
+                  ) : null}
                 </div>
               </div>
               <div className="quote-details">
@@ -232,6 +248,7 @@ export function Comparison({
           <span>{t('{0} 组报价 · 各地区分别列出', [rows.length])}</span>
         </div>
       ) : null}
+      {!provider ? <RevolutPanel value={value} /> : null}
       {refs.length ? (
         <div className="reference-section">
           <h3>{t('参考价，另行比较')}</h3>
