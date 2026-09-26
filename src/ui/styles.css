@@ -130,26 +130,12 @@ button:hover:not(:disabled) {
   flex-direction: column;
 }
 .brand b {
-  font-size: 25px;
-  letter-spacing: 2px;
   line-height: 1.1;
   font-weight: 750;
 }
 .brand span {
-  font-size: 8px;
   font-weight: 650;
-  letter-spacing: 2.5px;
   line-height: 1.8;
-}
-.brand.small > svg {
-  width: 26px;
-  height: 26px;
-}
-.brand.small b {
-  font-size: 19px;
-}
-.brand.small span {
-  font-size: 6px;
 }
 .icon-button {
   display: inline-flex;
@@ -167,7 +153,6 @@ button:hover:not(:disabled) {
 .popup {
   width: 400px;
   background: var(--surface);
-  min-height: 560px;
   padding: 0 22px;
   position: relative;
   margin: 0 auto;
@@ -414,27 +399,17 @@ button:hover:not(:disabled) {
   padding: 6px 8px;
 }
 .source-meta {
-  font-size: 10px;
   line-height: 1.5;
   color: var(--muted);
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  flex-wrap: wrap;
-}
-.source-meta a {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
 }
 .source-meta time {
   white-space: nowrap;
 }
-.source-meta a:hover {
-  color: var(--green);
-}
 .notice {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.55;
   margin: 7px 0;
   color: var(--muted);
@@ -576,7 +551,6 @@ button:hover:not(:disabled) {
   width: 13px;
 }
 .watch-attribution {
-  font-size: 9px;
   display: flex;
   justify-content: space-between;
   gap: 5px;
@@ -607,7 +581,7 @@ button:hover:not(:disabled) {
   font-size: 12px;
   font-weight: 550;
 }
-.popup-footer span {
+.popup-footer > div > span {
   display: block;
   font-size: 10px;
   color: var(--muted);
@@ -651,7 +625,6 @@ button:hover:not(:disabled) {
   gap: 4px;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
   color: var(--muted);
   padding: 3px 0 12px;
 }
@@ -792,7 +765,7 @@ button:hover:not(:disabled) {
 }
 .provider-title small {
   display: block;
-  font-size: 9px;
+  font-size: 10px;
   margin-top: 3px;
 }
 .received {
@@ -807,7 +780,7 @@ button:hover:not(:disabled) {
   font-variant-numeric: tabular-nums;
 }
 .received small {
-  font-size: 9px;
+  font-size: 10px;
 }
 .quote-details {
   display: flex;
@@ -821,14 +794,10 @@ button:hover:not(:disabled) {
 .comparison-footer {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
   margin: 10px 0 19px;
   gap: 5px;
-}
-.comparison-footer a {
-  display: flex;
-  align-items: center;
 }
 .reference-section {
   background: var(--canvas);
@@ -836,8 +805,7 @@ button:hover:not(:disabled) {
   padding: 13px;
   margin: 17px 0;
 }
-.reference-section > p,
-.official-shortcuts > p {
+.reference-section > p {
   font-size: 10px;
   margin: 4px 0 9px;
 }
@@ -862,31 +830,8 @@ button:hover:not(:disabled) {
 }
 .reference-row small {
   display: block;
-  font-size: 9px;
-  margin-top: 3px;
-}
-.official-shortcuts > a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-}
-.official-shortcuts b {
-  flex: 1;
-  font-size: 12px;
-}
-.official-shortcuts > a > span:nth-last-of-type(1) {
-  color: var(--muted);
   font-size: 10px;
-}
-.official-shortcuts .provider-monogram {
-  font-size: 13px;
-  width: 25px;
-  height: 25px;
-}
-.official-shortcuts > h3 {
-  font-size: 13px;
+  margin-top: 3px;
 }
 .empty {
   text-align: center;
@@ -980,7 +925,6 @@ button:hover:not(:disabled) {
 }
 .settings-main h1 {
   font-size: 27px;
-  line-height: 1.4;
   letter-spacing: -0.7px;
 }
 .settings-main > header > p {
@@ -1115,19 +1059,6 @@ button:hover:not(:disabled) {
   font-size: 11px;
   font-weight: 550;
 }
-.source-links {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin-top: 13px;
-}
-.source-links a {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  font-size: 11px;
-  color: var(--green);
-}
 .directory-controls {
   display: flex;
   justify-content: space-between;
@@ -1145,19 +1076,6 @@ button:hover:not(:disabled) {
 .directory {
   border-top: 1px solid var(--border);
 }
-.directory > a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 3px;
-  border-bottom: 1px solid var(--border);
-}
-.directory > a:hover {
-  background: var(--hover);
-}
-.directory > a > div {
-  flex: 1;
-}
 .directory b {
   font-size: 12px;
   font-weight: 600;
@@ -1171,65 +1089,6 @@ button:hover:not(:disabled) {
   color: var(--muted);
   min-width: 45px;
   text-align: right;
-}
-.directory > a > svg {
-  color: var(--muted);
-}
-.card-calculator {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-}
-.card-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.card-grid label {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  font-size: 11px;
-  color: var(--muted);
-}
-.card-grid input,
-.card-grid select {
-  width: 100%;
-  font-size: 12px;
-}
-.card-grid .currency-trigger {
-  border: 1px solid var(--border);
-  justify-content: flex-start;
-}
-.card-grid .currency-trigger > svg {
-  margin-left: auto;
-}
-.card-total {
-  margin: 22px 0 18px;
-  padding: 16px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.card-total span {
-  font-size: 11px;
-  color: var(--muted);
-}
-.card-total strong {
-  font-size: 25px;
-  color: var(--green);
-  font-weight: 600;
-  word-break: break-word;
-}
-.card-calculator > a {
-  font-size: 12px;
-  color: var(--green);
-  display: flex;
-  align-items: center;
-  gap: 5px;
 }
 .guide-intro > svg {
   color: var(--green);
@@ -1324,7 +1183,7 @@ button:hover:not(:disabled) {
   font-size: 10.5px;
 }
 .watch-attribution {
-  font-size: 9.5px;
+  font-size: 10px;
 }
 .bottom-link {
   font-size: 10px;
@@ -1408,9 +1267,6 @@ button:hover:not(:disabled) {
   .settings-main {
     padding: 26px 18px;
   }
-  .settings-main h1 {
-    font-size: 23px;
-  }
   .settings-main > header {
     margin-bottom: 32px;
   }
@@ -1434,7 +1290,6 @@ button:hover:not(:disabled) {
     font-size: 10px;
   }
   .source-table > div {
-    grid-template-columns: 0.9fr 1fr 1.5fr;
     gap: 8px;
     padding: 12px 9px;
   }
@@ -1443,13 +1298,6 @@ button:hover:not(:disabled) {
   }
   .directory-type {
     display: none;
-  }
-  .card-calculator {
-    padding: 15px;
-  }
-  .card-total {
-    align-items: flex-start;
-    flex-direction: column;
   }
   .settings-main h2 {
     font-size: 16px;
@@ -1494,9 +1342,6 @@ button:hover:not(:disabled) {
   .setting-row select {
     max-width: 135px;
   }
-  .card-grid {
-    gap: 12px;
-  }
 }
 html.extension-popup,
 html.extension-popup body {
@@ -1528,14 +1373,12 @@ html.extension-popup .popup {
   color: var(--green);
 }
 .cards-intro {
-  font-size: 10px;
+  font-size: 11px;
   margin: 4px 0 17px;
 }
 .card-form {
   border: 1px solid var(--border);
   border-radius: 11px;
-  padding: 13px;
-  margin-bottom: 15px;
   background: var(--surface);
 }
 .card-form label {
@@ -1547,7 +1390,6 @@ html.extension-popup .popup {
 }
 .card-form > label > input {
   width: 100%;
-  font-size: 23px;
   font-variant-numeric: tabular-nums;
   border: 0;
   padding: 3px 0;
@@ -1557,8 +1399,6 @@ html.extension-popup .popup {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  margin: 4px 0 10px;
   border-bottom: 1px solid var(--border);
 }
 .card-currencies > div > span {
@@ -1567,9 +1407,6 @@ html.extension-popup .popup {
 }
 .card-currencies .currency-trigger {
   padding: 8px 0 0;
-}
-.card-currencies > .icon-button {
-  margin-top: 14px;
 }
 .card-options {
   display: grid;
@@ -1614,7 +1451,7 @@ html.extension-popup .popup {
   gap: 6px;
 }
 .visa .network-brand {
-  color: #5168ae;
+  color: var(--visa);
   font-style: italic;
   font-size: 21px;
   letter-spacing: 0.5px;
@@ -1625,7 +1462,7 @@ html.extension-popup .popup {
 .network-quote > header > span {
   margin-left: auto;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .network-quote > header > .icon-button {
   width: 23px;
@@ -1684,7 +1521,7 @@ html.extension-popup .popup {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
 }
 .network-details {
@@ -1703,7 +1540,7 @@ html.extension-popup .popup {
   font-variant-numeric: tabular-nums;
 }
 .card-difference {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--green);
   margin-top: 11px;
 }
@@ -1811,7 +1648,6 @@ html.extension-popup .popup {
 .revolut-region select {
   font-size: 11px;
   padding: 5px 7px;
-  max-width: 130px;
 }
 .revolut-result {
   display: flex;
@@ -1978,11 +1814,12 @@ html.extension-popup .popup {
 .popup-footer > div {
   min-width: 0;
 }
-.popup-footer span {
+.popup-footer > div > span {
   white-space: normal;
 }
 .source-meta {
   flex-wrap: wrap;
+  font-size: 11px;
 }
 .source-choice select {
   max-width: 100%;
@@ -2012,23 +1849,23 @@ html[lang='en'] .brand b {
   font-size: 19px;
 }
 html[lang='en'] .brand span {
-  font-size: 6.7px;
+  font-size: 8px;
   letter-spacing: 0.3px;
 }
 html[lang='en'] .settings-layout .brand span {
-  font-size: 7.5px;
+  font-size: 8px;
 }
 html[lang='en'] .popup-footer b {
   font-size: 11px;
 }
-html[lang='en'] .popup-footer span {
-  font-size: 9px;
+html[lang='en'] .popup-footer > div > span {
+  font-size: 10px;
 }
 html[lang='en'] .section-heading h2 {
   font-size: 14px;
 }
 html[lang='en'] .network-quote > header > span {
-  font-size: 8px;
+  font-size: 10px;
 }
 @media (max-width: 620px) {
   html[lang='en'] .settings-layout nav button {
@@ -2056,5 +1893,14 @@ html[lang='en'] .network-quote > header > span {
   }
   .settings-main h1 {
     font-size: 24px;
+  }
+}
+@media (min-width: 621px) and (max-width: 900px) {
+  .settings-layout > aside .brand > svg {
+    width: 30px;
+    height: 30px;
+  }
+  .settings-layout > aside .brand span {
+    white-space: normal;
   }
 }

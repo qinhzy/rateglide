@@ -161,13 +161,13 @@ svg {
   color: var(--muted);
 }
 .hint {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   margin: 0 0 10px;
   line-height: 1.7;
 }
 .meta {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   display: flex;
   justify-content: space-between;
@@ -185,7 +185,7 @@ svg {
   margin: 0 0 6px;
 }
 .notice {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   line-height: 1.65;
   margin-top: 7px;
