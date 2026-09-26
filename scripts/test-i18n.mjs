@@ -226,18 +226,18 @@ try {
   );
   await page.getByLabel('Amount to convert', { exact: true }).fill('invalid');
   await page
-    .getByText('Enter a valid amount, such as 1,000.50 or 1.000,50.', { exact: true })
+    .getByText('Enter a valid amount, such as 1,000.50, 1.000,50, or 2.5k.', { exact: true })
     .waitFor();
   check('invalid amount feedback translated');
   await page.getByLabel('Amount to convert', { exact: true }).fill('100');
   await page.getByLabel('Language', { exact: true }).selectOption('zh-CN');
-  await page.getByRole('button', { name: '刷卡', exact: true }).waitFor();
+  await page.getByRole('tab', { name: '刷卡', exact: true }).waitFor();
   check('manual Chinese override updates immediately');
   await page.reload();
-  await page.getByRole('button', { name: '换算', exact: true }).waitFor();
+  await page.getByRole('tab', { name: '换算', exact: true }).waitFor();
   check('language override survives reload');
   await page.getByLabel('界面语言', { exact: true }).selectOption('en');
-  await page.getByRole('button', { name: 'Cards', exact: true }).click();
+  await page.getByRole('tab', { name: 'Cards', exact: true }).click();
   await page.getByLabel('Visa estimated bill', { exact: true }).waitFor();
   await page.getByLabel('Mastercard estimated bill', { exact: true }).waitFor();
   await noHan(page, 'English cards, fee labels and dates');
@@ -279,17 +279,17 @@ try {
   );
   await page.getByRole('button', { name: 'Regions', exact: true }).click();
   await noHan(page, 'English region filters');
-  await page.getByRole('button', { name: 'Watchlist', exact: true }).click();
+  await page.getByRole('tab', { name: 'Watchlist', exact: true }).click();
   await page.locator('.watch-row').first().waitFor();
   await noHan(page, 'English watchlist and currency names');
   const settings = await context.newPage();
   await settings.goto(base + 'options.html');
   await settings.getByLabel('Language', { exact: true }).waitFor();
   await settings.getByLabel('Language', { exact: true }).selectOption('zh-CN');
-  await page.getByRole('button', { name: '关注', exact: true }).waitFor();
+  await page.getByRole('tab', { name: '关注', exact: true }).waitFor();
   check('language syncs across open extension pages');
   await settings.getByLabel('界面语言', { exact: true }).selectOption('en');
-  await page.getByRole('button', { name: 'Watchlist', exact: true }).waitFor();
+  await page.getByRole('tab', { name: 'Watchlist', exact: true }).waitFor();
   for (const width of [375, 620, 768, 1280]) {
     await settings.setViewportSize({ width, height: 900 });
     await fits(settings, width, `English preferences fit ${width}px`);

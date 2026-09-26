@@ -12,11 +12,11 @@ import {
   External,
   IconButton,
   Loading,
-  SourceMeta,
   timeLabel,
+  usePricePaste,
+  type ConvertState,
 } from './shared';
-import { parseNumber } from '../core/parser';
-import type { ConvertState } from './Converter';
+import { parseAmount } from '../core/parser';
 export function Comparison({
   value,
   setValue,
@@ -38,7 +38,8 @@ export function Comparison({
     [refs, setRefs] = useState<Quote[]>([]),
     [filter, setFilter] = useState('全部');
   const serial = useRef(0);
-  const amount = parseNumber(value.amount);
+  const amount = parseAmount(value.amount);
+  const onPaste = usePricePaste(value, setValue);
   useEffect(() => {
     const id = ++serial.current;
     setRows([]);
@@ -107,6 +108,7 @@ export function Comparison({
           maxLength={40}
           value={value.amount}
           onChange={(e) => setValue({ ...value, amount: e.target.value })}
+          onPaste={onPaste}
         />
         <CurrencyPicker
           label={t('比价原币种')}

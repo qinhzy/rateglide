@@ -111,7 +111,14 @@ export async function getQuote(
           q = await wiseRate(from, to);
         } catch (e) {
           if (source !== 'auto') throw e;
-          q = marketQuote(await getMarket(force), from, to);
+          try {
+            q = marketQuote(await getMarket(force), from, to);
+          } catch (fallback) {
+            // Name the preferred source first; the fallback reason alone would be misleading.
+            throw new Error(
+              'Wise 暂不可用或不支持此币种。' + (fallback instanceof Error ? fallback.message : ''),
+            );
+          }
           q.notice = 'Wise 暂不可用或不支持此币种，已使用每日参考价。' + q.notice;
         }
       }

@@ -91,8 +91,8 @@ export const english: Record<string, string> = {
   取消关注此币种: 'Remove currency from watchlist',
   关注此币种: 'Watch this currency',
   原币种: 'From currency',
-  '请输入有效金额，例如 1,000.50 或 1.000,50':
-    'Enter a valid amount, such as 1,000.50 or 1.000,50.',
+  '请输入有效金额，例如 1,000.50、1.000,50 或 2.5k':
+    'Enter a valid amount, such as 1,000.50, 1.000,50, or 2.5k.',
   约合: 'Approximately',
   交换币种: 'Swap currencies',
   换算结果: 'Conversion result',
@@ -308,6 +308,8 @@ export const english: Record<string, string> = {
   '选中外币价格，让换算随手发生': 'Select a price. See it in your currency.',
   '已暂停，仍可使用工具栏换算': 'Paused. The toolbar converter still works.',
   网页划词开关: 'Selection conversion',
+  '在 {0} 停用': 'Pause on {0}',
+  '已在 {0} 停用 · 恢复': 'Paused on {0} · Resume',
   查看数据来源与支持范围: 'Sources and coverage',
   汇见: 'RateGlide',
   选择币种: 'Choose a currency',
@@ -316,6 +318,9 @@ export const english: Record<string, string> = {
   关闭币种搜索: 'Close currency search',
   '没有找到币种，试试 USD 或 美元': 'No currencies found. Try USD or dollar.',
   '{0} 个币种代码 · 覆盖范围因数据源而异': '{0} currency codes · Coverage varies by provider',
+  常用: 'Frequent',
+  全部币种: 'All currencies',
+  '{0} 个匹配 · ↑↓ 选择，Enter 确认': '{0} matches · ↑↓ to move, Enter to choose',
   '正在获取最新汇率…': 'Getting the latest rate…',
   重新获取: 'Retry',
   '来源时间：': 'Source timestamp: ',
@@ -373,6 +378,7 @@ export const english: Record<string, string> = {
   等值换算: 'Equal value',
   'Wise 暂不可用或不支持此币种，已使用每日参考价。':
     'Wise is unavailable or does not support this currency. Using a daily reference rate.',
+  'Wise 暂不可用或不支持此币种。': 'Wise is unavailable or does not support this currency.',
   '最新请求失败，显示上次缓存；请勿当作实时价。':
     'The latest request failed. Showing a saved quote, not a live rate.',
   未知请求: 'Unknown request.',

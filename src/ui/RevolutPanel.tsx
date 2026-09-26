@@ -2,11 +2,10 @@ import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { rpc } from '../core/client';
-import { parseNumber } from '../core/parser';
+import { parseAmount } from '../core/parser';
 import type { RevolutQuote } from '../core/types';
 import { formatAmount, formatRate } from '../data/currencies';
-import { ErrorBox, IconButton, Loading, timeLabel } from './shared';
-import type { ConvertState } from './Converter';
+import { ErrorBox, IconButton, Loading, timeLabel, type ConvertState } from './shared';
 export function RevolutPanel({ value }: { value: ConvertState }) {
   const [country, setCountry] = useState('GB'),
     [quote, setQuote] = useState<RevolutQuote | null>(null),
@@ -14,7 +13,7 @@ export function RevolutPanel({ value }: { value: ConvertState }) {
     [loading, setLoading] = useState(false),
     [rev, setRev] = useState(0);
   const seq = useRef(0);
-  const amount = parseNumber(value.amount);
+  const amount = parseAmount(value.amount);
   useEffect(() => {
     const id = ++seq.current;
     setQuote(null);

@@ -1,56 +1,6 @@
-import { currencyCodes } from '../data/currencies';
+import { currencyAliases, currencyCodes } from '../data/currencies';
 import { DEFAULTS, type ParsedMoney, type Settings } from './types';
-const aliases: Record<string, string> = {
-  人民币: 'CNY',
-  人民幣: 'CNY',
-  元人民币: 'CNY',
-  美元: 'USD',
-  美金: 'USD',
-  美刀: 'USD',
-  欧元: 'EUR',
-  歐元: 'EUR',
-  英镑: 'GBP',
-  英鎊: 'GBP',
-  港币: 'HKD',
-  港幣: 'HKD',
-  港元: 'HKD',
-  日元: 'JPY',
-  日圆: 'JPY',
-  日圓: 'JPY',
-  韩元: 'KRW',
-  韓元: 'KRW',
-  新加坡元: 'SGD',
-  新币: 'SGD',
-  新幣: 'SGD',
-  澳元: 'AUD',
-  澳币: 'AUD',
-  澳幣: 'AUD',
-  加元: 'CAD',
-  纽元: 'NZD',
-  紐元: 'NZD',
-  新台币: 'TWD',
-  新臺幣: 'TWD',
-  台币: 'TWD',
-  臺幣: 'TWD',
-  澳门元: 'MOP',
-  澳門元: 'MOP',
-  泰铢: 'THB',
-  泰銖: 'THB',
-  卢布: 'RUB',
-  盧布: 'RUB',
-  卢比: 'INR',
-  盧比: 'INR',
-  瑞士法郎: 'CHF',
-  越南盾: 'VND',
-  马币: 'MYR',
-  馬幣: 'MYR',
-  令吉: 'MYR',
-  印尼盾: 'IDR',
-  菲律宾比索: 'PHP',
-  土耳其里拉: 'TRY',
-  南非兰特: 'ZAR',
-  巴西雷亚尔: 'BRL',
-};
+const aliases = currencyAliases;
 const symbols: Record<string, string> = {
   US$: 'USD',
   'U.S.$': 'USD',
@@ -195,19 +145,31 @@ export function parseMoney(raw: string, settings: Settings = DEFAULTS): ParsedMo
     ambiguous = true;
     hint = `未包含货币符号，按 ${settings.defaultCurrency} 识别`;
   }
-  text = text.trim();
+  const amount = parseAmount(text);
+  if (amount === null) return null;
+  return { amount, currency: found[0], raw, ambiguous, hint };
+}
+const multipliers: Record<string, number> = {
+  万: 1e4,
+  萬: 1e4,
+  亿: 1e8,
+  億: 1e8,
+  千: 1e3,
+  k: 1e3,
+  m: 1e6,
+  bn: 1e9,
+};
+/** A number with an optional k / m / bn / 千 / 万 / 亿 multiplier, such as 2.5k or 1.2万. */
+export function parseAmount(raw: string): number | null {
+  let text = normalizeDigits(raw).trim();
   let mult = 1;
-  const suffix = text.match(/(万|萬|亿|億|千|[kKmM]|bn)\s*$/);
+  const suffix = text.match(/(万|萬|亿|億|千|[km]|bn)\s*$/i);
   if (suffix) {
-    mult = (
-      { 万: 1e4, 萬: 1e4, 亿: 1e8, 億: 1e8, 千: 1e3, k: 1e3, m: 1e6, bn: 1e9 } as Record<
-        string,
-        number
-      >
-    )[suffix[1].toLowerCase()];
+    mult = multipliers[suffix[1].toLowerCase()];
     text = text.slice(0, suffix.index).trim();
   }
   const amount = parseNumber(text);
   if (amount === null || Math.abs(amount * mult) > 1e12) return null;
-  return { amount: amount * mult, currency: found[0], raw, ambiguous, hint };
+  // Round away binary noise such as 1.1 * 1e3 = 1100.0000000000002.
+  return mult === 1 ? amount : Number((amount * mult).toPrecision(15));
 }

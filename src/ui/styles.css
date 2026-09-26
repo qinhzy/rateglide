@@ -311,6 +311,22 @@ button:hover:not(:disabled) {
   padding: 9px;
   border-radius: 7px;
   font-size: 12px;
+  cursor: pointer;
+}
+.currency-option[aria-selected='true'] {
+  background: var(--hover);
+}
+.currency-option > svg {
+  color: var(--green);
+}
+.currency-group {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 7px 9px 3px;
+}
+.currency-group ~ .currency-option:last-child {
+  margin-bottom: 4px;
 }
 .currency-option > span:nth-child(2) {
   flex: 1;
@@ -1903,4 +1919,26 @@ html[lang='en'] .network-quote > header > span {
   .settings-layout > aside .brand span {
     white-space: normal;
   }
+}
+.inverse-rate {
+  display: block;
+  font-size: 10px;
+  margin-top: 1px;
+}
+.site-toggle {
+  display: block;
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 1px 0;
+  font-size: 11px;
+  color: var(--green);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+}
+.site-toggle:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
 }

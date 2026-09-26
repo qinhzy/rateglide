@@ -6,8 +6,8 @@ import type { Settings } from '../core/types';
 import { Cards } from './Cards';
 import { Comparison } from './Comparison';
 import { RevolutPanel } from './RevolutPanel';
-import { Converter, type ConvertState } from './Converter';
-import { CurrencyPicker, External, IconButton } from './shared';
+import { Converter } from './Converter';
+import { CurrencyPicker, External, IconButton, usePricePaste, type ConvertState } from './shared';
 
 export function Sources({
   settings,
@@ -24,6 +24,7 @@ export function Sources({
     if (selected) workspace.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   }, [selected]);
   const [value, setValue] = useState<ConvertState>({ amount: '100', from: 'USD', to: 'CNY' });
+  const onPaste = usePricePaste(value, setValue);
   const list = directory.filter(
     (p) =>
       (filter === '全部' || p.category === filter) &&
@@ -174,8 +175,10 @@ export function Sources({
               <div className="compare-input">
                 <input
                   aria-label={t('Revolut 换币金额')}
+                  inputMode="decimal"
                   value={value.amount}
                   onChange={(e) => setValue({ ...value, amount: e.target.value })}
+                  onPaste={onPaste}
                 />
                 <CurrencyPicker
                   label={t('Revolut 原币种')}

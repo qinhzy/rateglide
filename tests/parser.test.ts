@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMoney, parseNumber } from '../src/core/parser';
+import { parseAmount, parseMoney, parseNumber } from '../src/core/parser';
 import { DEFAULTS } from '../src/core/types';
 const cases: [string, number, string][] = [
   ['$129.00', 129, 'USD'],
@@ -88,4 +88,19 @@ test('zero and invalid numeric inputs distinct', () => {
   assert.equal(parseNumber('0'), 0);
   assert.equal(parseNumber('..'), null);
   assert.equal(parseNumber('1,00'), 1);
+});
+test('amount fields accept k, m, bn and Chinese multipliers', () => {
+  for (const [text, amount] of [
+    ['2.5k', 2500],
+    ['1.1K', 1100],
+    ['3 m', 3e6],
+    ['1bn', 1e9],
+    ['2.5万', 25000],
+    ['1.2亿', 1.2e8],
+    ['８千', 8000],
+    ['1,234.5', 1234.5],
+  ] as const)
+    assert.equal(parseAmount(text), amount, text);
+  for (const text of ['k', '2.5kk', '1e3', 'abc', '9999999999999k', ''])
+    assert.equal(parseAmount(text), null, text);
 });

@@ -90,7 +90,7 @@ try {
   check('copy success feedback', true);
   await page.getByLabel('原币种', { exact: true }).click();
   await page.getByLabel('搜索币种', { exact: true }).fill('日元');
-  await page.getByRole('button', { name: /日元 Japanese Yen JPY/ }).click();
+  await page.getByRole('option', { name: /日元 Japanese Yen JPY/ }).click();
   check(
     'currency search changes original currency',
     await page
@@ -116,14 +116,14 @@ try {
     (await page.getByLabel('换算结果', { exact: true }).innerText()) === '—',
   );
   await page.getByLabel('兑换金额', { exact: true }).fill('1000');
-  await page.getByRole('button', { name: '关注', exact: true }).click();
+  await page.getByRole('tab', { name: '关注', exact: true }).click();
   check(
     'watchlist renders',
     await page.getByRole('heading', { name: '关注的货币', exact: true }).isVisible(),
   );
   await page.getByLabel('添加关注币种', { exact: true }).click();
   await page.getByLabel('搜索币种', { exact: true }).fill('AUD');
-  await page.getByRole('button', { name: /澳大利亚元|澳元/ }).click();
+  await page.getByRole('option', { name: /澳大利亚元|澳元/ }).click();
   await page.getByRole('button', { name: '添加关注', exact: true }).click();
   check('favorite persisted', (await rpc({ type: 'settings' })).data.favorites.includes('AUD'));
   await page.getByLabel('取消关注 AUD', { exact: true }).click();

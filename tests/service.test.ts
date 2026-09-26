@@ -140,3 +140,20 @@ test('history is bounded and can be cleared', async () => {
   await handleMessage({ type: 'clearHistory' });
   assert.equal((await read<any[]>('history', [])).length, 0);
 });
+test('auto mode names Wise when the daily fallback cannot help either', async () => {
+  globalThis.fetch = async (input) =>
+    String(input).includes('wise.com')
+      ? new Response('', { status: 503 })
+      : Response.json({
+          result: 'success',
+          base_code: 'USD',
+          rates: { USD: 1, CNY: 7 },
+          time_last_update_unix: Date.now() / 1000,
+          time_next_update_unix: Date.now() / 1000 + 86400,
+        });
+  await assert.rejects(getQuote('USD', 'KRW', 'auto'), (e: Error) => {
+    assert.match(e.message, /^Wise 暂不可用或不支持此币种。/);
+    assert.match(e.message, /每日参考源未覆盖此币种/);
+    return true;
+  });
+});

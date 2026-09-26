@@ -3,11 +3,17 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, Check, Copy, CreditCard, RefreshCw } from 'lucide-react';
 import { rpc } from '../core/client';
 import { CARD_LABELS, today } from '../core/payments';
-import { parseNumber } from '../core/parser';
+import { parseAmount, parseNumber } from '../core/parser';
 import type { CardNetwork, CardQuote, Settings } from '../core/types';
 import { formatAmount, formatRate } from '../data/currencies';
-import { CurrencyPicker, ErrorBox, IconButton, Loading } from './shared';
-import type { ConvertState } from './Converter';
+import {
+  CurrencyPicker,
+  ErrorBox,
+  IconButton,
+  Loading,
+  usePricePaste,
+  type ConvertState,
+} from './shared';
 
 export function Cards({
   value,
@@ -28,8 +34,9 @@ export function Cards({
     [busy, setBusy] = useState<CardNetwork[]>([]),
     [copied, setCopied] = useState('');
   const serial = useRef(0),
-    amount = parseNumber(value.amount),
+    amount = parseAmount(value.amount),
     bankFee = parseNumber(fee);
+  const onPaste = usePricePaste(value, setValue);
   const invalid =
     amount === null || amount <= 0 || amount > 1e8
       ? '交易金额应大于 0 且不超过 1 亿'
@@ -107,6 +114,7 @@ export function Cards({
             value={value.amount}
             maxLength={40}
             onChange={(e) => setValue({ ...value, amount: e.target.value })}
+            onPaste={onPaste}
           />
         </label>
         <div className="card-currencies">
