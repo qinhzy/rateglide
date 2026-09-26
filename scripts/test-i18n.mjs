@@ -13,7 +13,7 @@ const extension = path.resolve('release/chromium');
 const server = createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(
-    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="home">US$ 129.00</p><p id="price">€ 129.00</p><p>Ordinary text is not a price.</p></body></html>',
+    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="home">US$ 129.00</p><p id="price">€ 129.00</p><p>Ordinary text is not a price.</p><div id="wide" style="width:600px;overflow-x:auto"><div style="width:2400px"><span id="wide-price">€ 42.00</span></div></div></body></html>',
   );
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -423,6 +423,14 @@ try {
     path: path.join(out, 'english-selection.png'),
     animations: 'disabled',
   });
+  await practice.keyboard.press('Escape');
+  await dragSelect('#wide-price');
+  await practice.getByRole('button', { name: 'Convert to USD', exact: true }).waitFor();
+  await practice.locator('#wide').evaluate((el) => (el.scrollLeft = 1200));
+  await practice.waitForFunction(() => !document.querySelector('huijian-helper'), null, {
+    timeout: 5000,
+  });
+  check('popup closes when horizontal scrolling moves the selection out of view');
   await practice.keyboard.press('Escape');
   await practice.goto(base + 'practice.html');
   await practice

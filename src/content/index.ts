@@ -419,7 +419,14 @@ function follow() {
   followFrame = 0;
   if (!host) return;
   const r = anchorRange?.getBoundingClientRect();
-  if (!r || (!r.width && !r.height) || r.bottom < 0 || r.top > innerHeight) {
+  if (
+    !r ||
+    (!r.width && !r.height) ||
+    r.bottom < 0 ||
+    r.top > innerHeight ||
+    r.right < 0 ||
+    r.left > innerWidth
+  ) {
     hide();
     return;
   }
