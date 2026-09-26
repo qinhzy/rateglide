@@ -8,7 +8,6 @@ import {
   Download,
   History,
   MousePointer2,
-  Search,
   Settings2,
   ShieldCheck,
   Trash2,
@@ -39,8 +38,9 @@ function tabFromHash(): SettingsTab {
 function useShortcut() {
   const [shortcut, setShortcut] = useState<string | null>(null);
   useEffect(() => {
-    ext?.commands
-      ?.getAll?.()
+    if (!ext?.commands?.getAll) return;
+    Promise.resolve()
+      .then(() => ext!.commands.getAll())
       .then((commands) =>
         setShortcut(commands.find((c) => c.name === 'convert-selection')?.shortcut ?? ''),
       )

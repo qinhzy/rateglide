@@ -215,6 +215,13 @@ try {
   await fits(page, 400, 'English popup fits 400px');
   await page.screenshot({ path: path.join(out, 'english-converter.png'), animations: 'disabled' });
   await page.getByLabel('From currency', { exact: true }).click();
+  await page.getByLabel('Search currencies', { exact: true }).fill('japan');
+  await page.getByLabel('Search currencies', { exact: true }).press('Enter');
+  check(
+    'currency search ranks country names and accepts Enter',
+    (await page.getByLabel('From currency', { exact: true }).innerText()).includes('JPY'),
+  );
+  await page.getByLabel('From currency', { exact: true }).click();
   await page.getByLabel('Search currencies', { exact: true }).fill('Canadian');
   await page.locator('.currency-option').filter({ hasText: 'CAD' }).click();
   check(
@@ -229,6 +236,12 @@ try {
     .getByText('Enter a valid amount, such as 1,000.50, 1.000,50, or 2.5k.', { exact: true })
     .waitFor();
   check('invalid amount feedback translated');
+  await page.getByLabel('Amount to convert', { exact: true }).fill('2.5k');
+  await page
+    .getByLabel('Conversion result', { exact: true })
+    .filter({ hasText: '1,785.71' })
+    .waitFor();
+  check('amount shorthand converts 2.5k');
   await page.getByLabel('Amount to convert', { exact: true }).fill('100');
   await page.getByLabel('Language', { exact: true }).selectOption('zh-CN');
   await page.getByRole('tab', { name: '刷卡', exact: true }).waitFor();
@@ -236,10 +249,20 @@ try {
   await page.reload();
   await page.getByRole('tab', { name: '换算', exact: true }).waitFor();
   check('language override survives reload');
+  check(
+    'the last conversion is remembered',
+    (await page.getByLabel('兑换金额', { exact: true }).inputValue()) === '100' &&
+      (await page.getByLabel('原币种', { exact: true }).innerText()).includes('CAD'),
+  );
   await page.getByLabel('界面语言', { exact: true }).selectOption('en');
   await page.getByRole('tab', { name: 'Cards', exact: true }).click();
   await page.getByLabel('Visa estimated bill', { exact: true }).waitFor();
   await page.getByLabel('Mastercard estimated bill', { exact: true }).waitFor();
+  check(
+    'the cheaper card is identified',
+    (await page.locator('[data-network="visa"] .best-badge').innerText()) === 'Lower' &&
+      (await page.locator('.card-difference').innerText()).startsWith('Visa is estimated to cost'),
+  );
   await noHan(page, 'English cards, fee labels and dates');
   await page.screenshot({ path: path.join(out, 'english-cards.png'), animations: 'disabled' });
   await page.getByLabel('Bank fee', { exact: true }).fill('1.5');
@@ -270,6 +293,25 @@ try {
   await page.goto(base + 'popup.html?popup=1&tab=compare&from=GBP&to=EUR&amount=1000');
   await page.locator('.compare-row').first().waitFor();
   await page.locator('.revolut-result').waitFor();
+  check(
+    'the route with the most received is marked',
+    (await page.locator('.compare-row').first().locator('.best-badge').innerText()) ===
+      'Most received' &&
+      (await page.locator('.shortfall').count()) ===
+        (await page.locator('.compare-row').count()) - 1,
+  );
+  check(
+    'transfer estimates come before the Revolut exchange quote',
+    await page.evaluate(
+      () =>
+        !!(
+          document
+            .querySelector('.quote-list')
+            .compareDocumentPosition(document.querySelector('.revolut-panel')) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+    ),
+  );
   await noHan(page, 'English comparison, Revolut and source notices');
   await page.getByRole('button', { name: 'Banks', exact: true }).click();
   check(
@@ -332,6 +374,17 @@ try {
   check(
     'English CSV uses international filename',
     download.suggestedFilename() === 'RateGlide-history.csv',
+  );
+  await settings.goto(base + 'options.html#not-a-section');
+  await settings
+    .locator('nav button[aria-current="page"]')
+    .filter({ hasText: 'Preferences' })
+    .waitFor();
+  check('unknown settings sections fall back to Preferences');
+  const { version } = JSON.parse(await fs.readFile('package.json', 'utf8'));
+  check(
+    'settings show the packaged version',
+    (await settings.locator('.sidebar-footer span').innerText()) === `RateGlide · v${version}`,
   );
   const practice = await context.newPage();
   await practice.setViewportSize({ width: 1100, height: 700 });

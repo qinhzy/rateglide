@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { RevolutPanel } from './RevolutPanel';
 import { rpc } from '../core/client';
-import { formatAmount, formatRate } from '../data/currencies';
+import { decimals, formatAmount, formatRate } from '../data/currencies';
 import { countries } from '../data/directory';
 import type { CompareRow, Quote } from '../core/types';
 import {
@@ -86,6 +86,8 @@ export function Comparison({
     .filter((r) => !provider || r.name.toLowerCase().startsWith(provider.toLowerCase()))
     .filter((r) => filter === '全部' || r.type === filter);
   const best = filtered[0]?.received;
+  // Differences below half a minor unit would display as zero.
+  const minorUnit = 10 ** -decimals(value.to) / 2;
   const regions = [sourceCountry, targetCountry].filter(Boolean).length;
   return (
     <section className="comparison">
@@ -203,7 +205,7 @@ export function Comparison({
                     {value.to}
                     {t('· 预计到账')}
                   </small>
-                  {i > 0 && best !== undefined && best - r.received >= 0.005 ? (
+                  {i > 0 && best !== undefined && best - r.received >= minorUnit ? (
                     <small className="shortfall">
                       {t('少到账 {0}', [formatAmount(best - r.received, value.to)])}
                     </small>

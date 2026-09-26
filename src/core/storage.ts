@@ -66,6 +66,10 @@ export async function saveSettings(patch: Partial<Settings>) {
   await write('settings', s);
   return s;
 }
+/** A sensible other side for a conversion from `code`: home currency, then the watchlist. */
+export function otherCurrency(code: string, settings: Settings) {
+  return [settings.target, ...settings.favorites, 'USD', 'EUR'].find((c) => c !== code)!;
+}
 export function siteBlocked(host: string, blocked: string[]) {
   return blocked.some((b) => host === b || host.endsWith('.' + b));
 }

@@ -3,7 +3,7 @@ import { StrictMode, useEffect, useRef, useState, useSyncExternalStore } from 'r
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, MousePointer2, Settings as SettingsIcon } from 'lucide-react';
 import { rpc, openOptions } from '../core/client';
-import { ext, read, siteBlocked, write } from '../core/storage';
+import { ext, otherCurrency, read, siteBlocked, write } from '../core/storage';
 import { type Settings as Prefs } from '../core/types';
 import { parseMoney } from '../core/parser';
 import { currencyCodes } from '../data/currencies';
@@ -36,13 +36,21 @@ const pausableHost = /^[a-z0-9.-]+(?::\d+)?$/;
 async function initialConversion(s: Prefs): Promise<ConvertState> {
   const query = new URLSearchParams(location.search);
   const parsed = parseMoney(query.get('text') || '', s);
-  const fallbackFrom = s.target === 'USD' ? 'EUR' : 'USD';
-  if (parsed || query.has('from') || query.has('to') || query.has('amount'))
+  const fallbackFrom = otherCurrency(s.target, s);
+  const code = (key: string) => {
+    const c = query.get(key)?.toUpperCase() ?? '';
+    return currencyCodes.has(c) ? c : '';
+  };
+  if (parsed || query.has('from') || query.has('to') || query.has('amount')) {
+    const from = parsed?.currency || code('from') || fallbackFrom;
+    const to = code('to') || s.target;
+    // A price already in the home currency converts into another currency instead.
     return {
       amount: parsed ? String(parsed.amount) : query.get('amount') || '1000',
-      from: parsed?.currency || query.get('from') || fallbackFrom,
-      to: query.get('to') || s.target,
+      from,
+      to: to === from ? otherCurrency(from, s) : to,
     };
+  }
   const last = await read<LastConversion | null>('lastConversion', null).catch(() => null);
   if (!last || !currencyCodes.has(last.from) || !currencyCodes.has(last.to))
     return { amount: '1000', from: fallbackFrom, to: s.target };
@@ -97,9 +105,11 @@ function App() {
   }, [value, settings?.target]);
   useEffect(() => {
     if (settings && tab !== 'convert') focusOnOpen.current = false;
+  }, [tab, settings]);
+  useEffect(() => {
     // Each tab starts at its top instead of inheriting the previous tab's scroll position.
     panel.current?.scrollTo({ top: 0 });
-  }, [tab, settings]);
+  }, [tab]);
   useEffect(() => {
     // Ask the page in the active tab for its host so selection can be paused there.
     if (isSettings || !ext?.tabs?.query) return;

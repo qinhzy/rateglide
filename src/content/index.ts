@@ -1,7 +1,7 @@
 import css from './style.css';
 import { t, setLanguage, getLanguage, getLocale } from '../i18n';
 import { parseMoney } from '../core/parser';
-import { ext, siteBlocked } from '../core/storage';
+import { ext, otherCurrency, siteBlocked } from '../core/storage';
 import {
   currencies,
   currencyCodes,
@@ -349,7 +349,8 @@ function capture(force = false, text?: string) {
   lastText = raw;
   selected = money;
   from = money.currency;
-  to = settings.target;
+  // Explicit requests for a home-currency price convert it into another currency.
+  to = from === settings.target ? otherCurrency(from, settings) : settings.target;
   if (force || settings.mode !== 'prompt') {
     mount();
     panel(force);
