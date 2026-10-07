@@ -21,3 +21,19 @@ for (const [folder, label] of [
   execFileSync('unzip', ['-tq', output], { stdio: 'pipe' });
   console.log(output);
 }
+// Chrome Web Store and Edge Add-ons assign their own extension IDs. The public key only keeps
+// the unpacked developer-mode ID stable, so the store upload leaves it out.
+{
+  const root = path.resolve('release', 'store');
+  await fs.rm(root, { recursive: true, force: true });
+  await fs.cp(path.resolve('release', 'chromium'), root, { recursive: true });
+  const file = path.join(root, 'manifest.json');
+  const manifest = JSON.parse(await fs.readFile(file, 'utf8'));
+  delete manifest.key;
+  await fs.writeFile(file, JSON.stringify(manifest, null, 2));
+  const output = path.resolve('release', `rateglide-store-${version}.zip`);
+  await fs.rm(output, { force: true });
+  execFileSync('zip', ['-q', '-r', output, '.', '-x', '*.DS_Store'], { cwd: root });
+  execFileSync('unzip', ['-tq', output], { stdio: 'pipe' });
+  console.log(output);
+}

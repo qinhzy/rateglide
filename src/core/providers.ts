@@ -82,6 +82,8 @@ export type MarketTable = {
   next: number;
   fetchedAt: number;
   offline?: boolean;
+  /** The table published before this one, for daily changes in the watchlist. */
+  previous?: { rates: Record<string, number>; asOf: number };
 };
 export async function marketRates(): Promise<MarketTable> {
   const r = await request('market', '/v6/latest/USD');

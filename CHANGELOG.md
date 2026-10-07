@@ -1,7 +1,22 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-10-07
 
+- Double-clicking a number picks up the currency written beside it, such as the $ of $129.00, so the most natural selection gesture now converts.
+- Superscript cents such as $129<sup>99</sup> are read as $129.99 instead of an amount 100 times larger.
+- $, ¥, 元, kr and Rs follow the page’s language, domain and nearby text: ¥ on a Chinese page is CNY and stays quiet for CNY users, ¥ on a Japanese page is JPY, and $ on a Canadian site is CAD. The popup names the reason, and Preferences can turn this off.
+- Recognize local notations including 円, 원, RM, Rp, zł, Kč, Ft, lei, S/, Fr., руб. and đ; million, billion, Mrd, 百万, 千万, lakh, crore, juta, rb, 만 and 억; notes such as （税込） or (incl. VAT); and 1.299,- €.
+- Read “150.000” as thousands for whole-unit currencies such as IDR and VND, and lone separators such as “1.299 €” by the page’s number format.
+- Optional hover mode: resting the pointer on a price shows the conversion prompt.
+- The selection popup shows both rate directions and the amount in up to three watched currencies; its currency menus show the code and name without clipping.
+- The toolbar converter shows the saved quote immediately while it refreshes. When Wise is slow, automatic mode shows the daily reference meanwhile and switches to Wise once it answers.
+- Comparisons show each route’s total cost against the mid-market rate, and card quotes show how far each network’s bill is from it.
+- The watchlist shows changes since the previous daily reference, quotes small currencies per 100 or 1,000 units, names its source up front, places Add at the top, and offers Undo after removing a currency.
+- Popup currency menus open as a titled sheet; the selection footer is one line and steps aside on Compare and Cards; typed values no longer look like placeholders; popup text is at least 11 px and settings descriptions 12 px.
+- Settings confirm saves and report errors in a toast at the bottom of the window, wherever the change was made.
+- A new installation opens the practice page. The toolbar badge shows OFF while selection is paused everywhere or on the current site.
+- The script injected into webpages loads only the translations it shows: 68 KB → 43 KB, despite the new features.
+- CI checks formatting.
 - Currency search ranks exact and partial codes first and also matches country or region names and everyday Chinese names (加元, 美金, 台币). The current, home and watched currencies are listed first, and the list works with Arrow keys and Enter.
 - Amount fields accept `2.5k`, `1bn`, `1.2万` and similar shorthands; pasting a price such as `€ 1.234,56` fills in the amount and currency.
 - The toolbar popup focuses the amount on open, remembers the last conversion, follows home-currency changes, shows the inverse rate, and resets each tab to its top. Its tabs use tablist semantics with Arrow, Home and End keys.

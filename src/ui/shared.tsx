@@ -150,114 +150,121 @@ export function CurrencyPicker({
         <ChevronDown size={14} />
       </button>
       {open ? (
-        <div
-          className="currency-menu"
-          role="dialog"
-          aria-label={t(label)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              e.stopPropagation();
-              close();
-            }
-            if (e.key === 'Tab') {
-              const items = e.currentTarget.querySelectorAll<HTMLElement>('input,button');
-              const first = items[0],
-                last = items[items.length - 1];
-              if (!e.shiftKey && document.activeElement === last) {
+        <>
+          {/* In the toolbar popup the menu is a sheet over the page, dimmed behind it. */}
+          <div className="currency-backdrop" aria-hidden="true" onClick={close} />
+          <div
+            className="currency-menu"
+            role="dialog"
+            aria-label={t(label)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
                 e.preventDefault();
-                first.focus();
-              } else if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
+                e.stopPropagation();
+                close();
               }
-            }
-          }}
-        >
-          <div className="search-field">
-            <Search size={16} aria-hidden="true" />
-            <input
-              autoFocus
-              role="combobox"
-              aria-expanded="true"
-              aria-autocomplete="list"
-              aria-controls={id + '-list'}
-              aria-activedescendant={options.length ? `${id}-${active}` : undefined}
-              placeholder={t('搜索币种、国家或代码')}
-              aria-label={t('搜索币种')}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setActive(0);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              if (e.key === 'Tab') {
+                const items = e.currentTarget.querySelectorAll<HTMLElement>('input,button');
+                const first = items[0],
+                  last = items[items.length - 1];
+                if (!e.shiftKey && document.activeElement === last) {
                   e.preventDefault();
-                  const step = e.key === 'ArrowDown' ? 1 : -1;
-                  setActive((i) => Math.max(0, Math.min(options.length - 1, i + step)));
-                } else if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                  first.focus();
+                } else if (e.shiftKey && document.activeElement === first) {
                   e.preventDefault();
-                  if (options[active]) choose(options[active]);
+                  last.focus();
                 }
-              }}
-            />
-            <IconButton label={t('关闭币种搜索')} onClick={close}>
-              <X size={15} />
-            </IconButton>
+              }
+            }}
+          >
+            <div className="currency-menu-title" aria-hidden="true">
+              {t(label)}
+            </div>
+            <div className="search-field">
+              <Search size={16} aria-hidden="true" />
+              <input
+                autoFocus
+                role="combobox"
+                aria-expanded="true"
+                aria-autocomplete="list"
+                aria-controls={id + '-list'}
+                aria-activedescendant={options.length ? `${id}-${active}` : undefined}
+                placeholder={t('搜索币种、国家或代码')}
+                aria-label={t('搜索币种')}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setActive(0);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const step = e.key === 'ArrowDown' ? 1 : -1;
+                    setActive((i) => Math.max(0, Math.min(options.length - 1, i + step)));
+                  } else if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    if (options[active]) choose(options[active]);
+                  }
+                }}
+              />
+              <IconButton label={t('关闭币种搜索')} onClick={close}>
+                <X size={15} />
+              </IconButton>
+            </div>
+            <div className="currency-results" id={id + '-list'} role="listbox" ref={list}>
+              {options.length ? (
+                groups.map(([title, codes]) => {
+                  const start = offset;
+                  offset += codes.length;
+                  return (
+                    <div role="group" aria-label={title ? t(title) : undefined} key={title}>
+                      {title ? (
+                        <div className="currency-group" aria-hidden="true">
+                          {t(title)}
+                        </div>
+                      ) : null}
+                      {codes.map((code, i) => (
+                        <div
+                          key={code}
+                          id={`${id}-${start + i}`}
+                          data-index={start + i}
+                          role="option"
+                          aria-selected={start + i === active}
+                          className="currency-option"
+                          onMouseMove={() => {
+                            if (active !== start + i) setActive(start + i);
+                          }}
+                          onClick={() => choose(code)}
+                        >
+                          <span className="flag" aria-hidden="true">
+                            {flag(code)}
+                          </span>
+                          <span>
+                            {currencyName(code)}
+                            <small>
+                              {getLanguage() === 'zh-CN'
+                                ? currencies.find((c) => c.code === code)?.en
+                                : currencyRegion(code) || code}
+                            </small>
+                          </span>
+                          <b>{code}</b>
+                          {code === value ? <Check size={15} aria-hidden="true" /> : null}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="empty">{t('没有找到币种，试试 USD 或 美元')}</p>
+              )}
+            </div>
+            <div className="menu-note">
+              {query.trim()
+                ? t('{0} 个匹配 · ↑↓ 选择，Enter 确认', [matches.length])
+                : t('{0} 个币种代码 · 覆盖范围因数据源而异', [currencies.length])}
+            </div>
           </div>
-          <div className="currency-results" id={id + '-list'} role="listbox" ref={list}>
-            {options.length ? (
-              groups.map(([title, codes]) => {
-                const start = offset;
-                offset += codes.length;
-                return (
-                  <div role="group" aria-label={title ? t(title) : undefined} key={title}>
-                    {title ? (
-                      <div className="currency-group" aria-hidden="true">
-                        {t(title)}
-                      </div>
-                    ) : null}
-                    {codes.map((code, i) => (
-                      <div
-                        key={code}
-                        id={`${id}-${start + i}`}
-                        data-index={start + i}
-                        role="option"
-                        aria-selected={start + i === active}
-                        className="currency-option"
-                        onMouseMove={() => {
-                          if (active !== start + i) setActive(start + i);
-                        }}
-                        onClick={() => choose(code)}
-                      >
-                        <span className="flag" aria-hidden="true">
-                          {flag(code)}
-                        </span>
-                        <span>
-                          {currencyName(code)}
-                          <small>
-                            {getLanguage() === 'zh-CN'
-                              ? currencies.find((c) => c.code === code)?.en
-                              : currencyRegion(code) || code}
-                          </small>
-                        </span>
-                        <b>{code}</b>
-                        {code === value ? <Check size={15} aria-hidden="true" /> : null}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })
-            ) : (
-              <p className="empty">{t('没有找到币种，试试 USD 或 美元')}</p>
-            )}
-          </div>
-          <div className="menu-note">
-            {query.trim()
-              ? t('{0} 个匹配 · ↑↓ 选择，Enter 确认', [matches.length])
-              : t('{0} 个币种代码 · 覆盖范围因数据源而异', [currencies.length])}
-          </div>
-        </div>
+        </>
       ) : null}
     </div>
   );
@@ -328,20 +335,27 @@ export function timeLabel(ms: number, dateOnly = false) {
     ...(!dateOnly ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
   }).format(ms);
 }
-export function SourceMeta({ quote }: { quote: Quote }) {
+export function SourceMeta({ quote, updating = false }: { quote: Quote; updating?: boolean }) {
   return (
     <div className="source-meta">
       <span title={t(quote.notice || '')}>
         {t(quote.label)} · {t(quote.kind)}
         <Info size={12} />
       </span>
-      <time
-        dateTime={new Date(quote.asOf).toISOString()}
-        title={t('来源时间：') + new Date(quote.asOf).toLocaleString(getLocale())}
-      >
-        {quote.stale ? t('过期缓存 · ') : quote.cached ? t('缓存 · ') : ''}
-        {timeLabel(quote.asOf, quote.source === 'ecb')}
-      </time>
+      {updating ? (
+        <span className="updating" role="status">
+          <LoaderCircle size={12} className="spin" />
+          {t('更新中…')}
+        </span>
+      ) : (
+        <time
+          dateTime={new Date(quote.asOf).toISOString()}
+          title={t('来源时间：') + new Date(quote.asOf).toLocaleString(getLocale())}
+        >
+          {quote.stale ? t('过期缓存 · ') : quote.cached ? t('缓存 · ') : ''}
+          {timeLabel(quote.asOf, quote.source === 'ecb')}
+        </time>
+      )}
     </div>
   );
 }

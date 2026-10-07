@@ -1,6 +1,13 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { getQuote, addHistory, handleMessage } from '../src/core/service';
+import {
+  getQuote,
+  addHistory,
+  handleMessage,
+  getMarket,
+  peekQuote,
+  timing,
+} from '../src/core/service';
 import { write, saveSettings, read } from '../src/core/storage';
 const memory = new Map<string, string>();
 const oldFetch = globalThis.fetch;
@@ -156,4 +163,90 @@ test('auto mode names Wise when the daily fallback cannot help either', async ()
     assert.match(e.message, /每日参考源未覆盖此币种/);
     return true;
   });
+});
+const daily = (asOf: number, cny = 7) =>
+  Response.json({
+    result: 'success',
+    base_code: 'USD',
+    rates: { USD: 1, CNY: cny },
+    time_last_update_unix: asOf / 1000,
+    time_next_update_unix: asOf / 1000 + 86400,
+  });
+test('a slow Wise answer shows the daily reference meanwhile, then Wise', async () => {
+  timing.wiseSoftTimeout = 20;
+  let release!: () => void;
+  const wiseArrives = new Promise<void>((resolve) => (release = resolve));
+  globalThis.fetch = async (input) => {
+    if (!String(input).includes('wise.com')) return daily(Date.now() - 3600000);
+    await wiseArrives;
+    return Response.json({ source: 'USD', target: 'CNY', value: 7.2, time: Date.now() });
+  };
+  try {
+    const first = await getQuote('USD', 'CNY', 'auto');
+    assert.equal(first.source, 'market');
+    assert.equal(first.provisional, true);
+    assert.match(first.notice!, /Wise 响应较慢/);
+    // The provisional quote is not cached, so it cannot outlive Wise's answer.
+    assert.equal(await read('quote:auto:USD:CNY', null), null);
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const second = await getQuote('USD', 'CNY', 'auto');
+    assert.equal(second.source, 'wise');
+    assert.equal(second.rate, 7.2);
+    assert.ok(!second.provisional);
+  } finally {
+    timing.wiseSoftTimeout = 2500;
+  }
+});
+test('a slow Wise answer is awaited when the daily reference is unavailable too', async () => {
+  timing.wiseSoftTimeout = 10;
+  globalThis.fetch = async (input) => {
+    if (!String(input).includes('wise.com')) return new Response('', { status: 503 });
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    return Response.json({ source: 'USD', target: 'CNY', value: 7.3, time: Date.now() });
+  };
+  try {
+    const q = await getQuote('USD', 'CNY', 'auto');
+    assert.equal(q.source, 'wise');
+    assert.equal(q.rate, 7.3);
+  } finally {
+    timing.wiseSoftTimeout = 2500;
+  }
+});
+test('peeking returns a saved quote without any request', async () => {
+  globalThis.fetch = async () => {
+    throw new Error('unexpected network');
+  };
+  assert.equal(await peekQuote('USD', 'CNY'), null);
+  await write('quote:auto:USD:CNY', {
+    from: 'USD',
+    to: 'CNY',
+    source: 'wise',
+    rate: 7.1,
+    label: 'Wise',
+    kind: '实时中间价',
+    asOf: Date.now() - 600000,
+    fetchedAt: Date.now() - 600000,
+    url: 'https://wise.com',
+  });
+  const q = await peekQuote('USD', 'CNY');
+  assert.equal(q?.rate, 7.1);
+  assert.equal(q?.cached, true);
+  assert.equal(q?.stale, true);
+  assert.equal(await peekQuote('USD', 'USD'), null);
+});
+test('the previous daily table is kept for daily changes', async () => {
+  const yesterday = Date.now() - 30 * 3600000,
+    today = Date.now() - 3600000;
+  globalThis.fetch = async () => daily(yesterday, 7);
+  const first = await getMarket();
+  assert.equal(first.previous, undefined);
+  globalThis.fetch = async () => daily(today, 7.1);
+  const second = await getMarket(true);
+  assert.equal(second.rates.CNY, 7.1);
+  assert.equal(second.previous?.rates.CNY, 7);
+  assert.equal(second.previous?.asOf, yesterday);
+  // An hourly check that finds the same publication leaves the previous table alone.
+  const third = await getMarket(true);
+  assert.equal(third.previous?.asOf, yesterday);
 });

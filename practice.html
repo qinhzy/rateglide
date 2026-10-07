@@ -121,6 +121,15 @@
       h1 {
         clear: both;
       }
+      .welcome {
+        margin: 0 0 22px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: #e6f0eb;
+        color: #145642;
+        font-size: 15px;
+        clear: both;
+      }
       .home-tag {
         margin-left: 8px;
         padding: 2px 8px;
@@ -144,7 +153,7 @@
   <body>
     <header>
       <h1>让世界的价格，更贴近你。</h1>
-      <p>这是汇见的划词练习场。拖动鼠标选中下面的一笔价格，点击浮出的换算提示。</p>
+      <p>这是汇见的划词练习场。拖动选中或双击下面的一笔价格，点击浮出的换算提示。</p>
       <span class="note">安装后第一次使用，请刷新这页。按 <kbd>Esc</kbd> 关闭浮层。</span>
     </header>
     <article>
@@ -177,8 +186,13 @@
           </tr>
           <tr>
             <td>日本</td>
-            <td id="yen-format">¥ 12,800</td>
-            <td>日元（可改）</td>
+            <td id="yen-format" lang="ja">¥ 12,800</td>
+            <td>日元（依网页语言）</td>
+          </tr>
+          <tr>
+            <td>日文写法</td>
+            <td id="jp-format">1,980円</td>
+            <td>日元</td>
           </tr>
           <tr>
             <td>中文</td>
@@ -209,6 +223,21 @@
             <td>泰国</td>
             <td id="th-format">฿ 1,280</td>
             <td>泰铢</td>
+          </tr>
+          <tr>
+            <td>马来西亚</td>
+            <td id="my-format">RM 25.90</td>
+            <td>林吉特</td>
+          </tr>
+          <tr>
+            <td>印尼</td>
+            <td id="id-format">Rp 150.000</td>
+            <td>印尼盾</td>
+          </tr>
+          <tr>
+            <td>上标分位</td>
+            <td id="sup-format">$129<sup>99</sup></td>
+            <td>美元</td>
           </tr>
         </tbody>
       </table>

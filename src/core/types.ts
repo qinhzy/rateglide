@@ -42,6 +42,8 @@ export type Quote = {
   fetchedAt: number;
   cached?: boolean;
   stale?: boolean;
+  /** A daily reference shown while a slow Wise request is still running. */
+  provisional?: boolean;
   notice?: string;
   url: string;
 };
@@ -54,7 +56,9 @@ export type Settings = {
   defaultYen: string;
   defaultCurrency: string;
   source: Source;
-  mode: 'prompt' | 'instant' | 'alt';
+  mode: 'prompt' | 'instant' | 'alt' | 'hover';
+  /** Read $, ¥, kr and number formats from the page's language and domain. */
+  smartSymbols: boolean;
   numbersOnly: boolean;
   theme: 'system' | 'light' | 'dark';
   blockedSites: string[];
@@ -102,6 +106,7 @@ export const DEFAULTS: Settings = {
   defaultCurrency: 'USD',
   source: 'auto',
   mode: 'prompt',
+  smartSymbols: true,
   numbersOnly: false,
   theme: 'system',
   blockedSites: [],

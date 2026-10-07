@@ -33,19 +33,84 @@ const ttl: Record<Exclude<Source, 'auto'>, number> = {
   mastercard: 300000,
   revolut: 60000,
 };
-export async function getMarket(force = false) {
+export async function getMarket(force = false): Promise<MarketTable> {
   return coalesce('market', async () => {
     const table = await read<MarketTable | null>('market', null);
-    if (table && Date.now() - table.fetchedAt < 3600000 && !force) return table;
+    // The previous day's table lets the watchlist show daily changes without another source.
+    const withPrevious = async (current: MarketTable) => {
+      const previous = await read<MarketTable['previous'] | null>('marketPrevious', null);
+      return previous ? { ...current, previous } : current;
+    };
+    if (table && Date.now() - table.fetchedAt < 3600000 && !force) return withPrevious(table);
     try {
       const r = await marketRates();
+      if (table && r.asOf > table.asOf)
+        await write('marketPrevious', { rates: table.rates, asOf: table.asOf });
       await write('market', r);
-      return r;
+      return withPrevious(r);
     } catch (e) {
-      if (table && Date.now() - table.asOf < 7 * 86400000) return { ...table, offline: true };
+      if (table && Date.now() - table.asOf < 7 * 86400000)
+        return withPrevious({ ...table, offline: true });
       throw e;
     }
   });
+}
+/** How long automatic mode waits for Wise before showing the daily reference meanwhile. */
+export const timing = { wiseSoftTimeout: 2500 };
+// A quote is stale once its source time is older than that source normally allows.
+function isStale(q: Quote, now = Date.now()) {
+  return (
+    now - q.asOf >
+    (['wise', 'revolut'].includes(q.source) ? 300000 : q.source === 'boc' ? 86400000 : 3 * 86400000)
+  );
+}
+async function saveQuote(key: string, q: Quote) {
+  q.stale = !!q.stale || isStale(q);
+  await write(key, q);
+  await pruneQuoteCache(key);
+}
+/** The saved quote for a pair, without a network request, so a popup can show it at once. */
+export async function peekQuote(from: string, to: string, source: Source = 'auto') {
+  validPair(from, to);
+  if (from === to) return null;
+  const cache = await read<Quote | null>(`quote:${source}:${from}:${to}`, null);
+  if (!cache || Date.now() - cache.asOf > 7 * 86400000) return null;
+  return { ...cache, cached: true, stale: !!cache.stale || isStale(cache) };
+}
+/** Wise first; the daily reference when Wise fails, or meanwhile while Wise is slow. */
+async function automatic(from: string, to: string, key: string, force: boolean): Promise<Quote> {
+  const live = coalesce(`wise:${from}:${to}`, () => wiseRate(from, to));
+  const daily = async () => marketQuote(await getMarket(force), from, to);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const slow = new Promise<'slow'>((resolve) => {
+    timer = setTimeout(() => resolve('slow'), timing.wiseSoftTimeout);
+  });
+  try {
+    const first = await Promise.race([live, slow]);
+    if (first !== 'slow') return first;
+    const meanwhile = await daily().catch(() => null);
+    if (!meanwhile) return await live;
+    // The provisional quote is never cached; Wise's answer is, for the next request.
+    void live.then((quote) => saveQuote(key, quote)).catch(() => {});
+    return {
+      ...meanwhile,
+      provisional: true,
+      notice: 'Wise 响应较慢，先显示每日参考价，稍后自动更新。' + (meanwhile.notice ?? ''),
+    };
+  } catch {
+    try {
+      const q = await daily();
+      q.notice = 'Wise 暂不可用或不支持此币种，已使用每日参考价。' + q.notice;
+      return q;
+    } catch (fallback) {
+      // Name the preferred source first; the fallback reason alone would be misleading.
+      throw new Error(
+        'Wise 暂不可用或不支持此币种。' + (fallback instanceof Error ? fallback.message : ''),
+      );
+    }
+  } finally {
+    clearTimeout(timer);
+  }
 }
 export async function getQuote(
   from: string,
@@ -78,18 +143,7 @@ export async function getQuote(
       now - cache.fetchedAt < ttl[cache.source] &&
       !(source === 'auto' && cache.source !== 'wise' && now - cache.fetchedAt > 60000)
     )
-      return {
-        ...cache,
-        cached: true,
-        stale:
-          !!cache.stale ||
-          now - cache.asOf >
-            (['wise', 'revolut'].includes(cache.source)
-              ? 300000
-              : cache.source === 'boc'
-                ? 86400000
-                : 3 * 86400000),
-      };
+      return { ...cache, cached: true, stale: !!cache.stale || isStale(cache, now) };
     try {
       let q: Quote;
       if (source === 'visa' || source === 'mastercard')
@@ -106,32 +160,11 @@ export async function getQuote(
           await write('boc', table);
         }
         q = bocQuote(table.data, from, to);
-      } else {
-        try {
-          q = await wiseRate(from, to);
-        } catch (e) {
-          if (source !== 'auto') throw e;
-          try {
-            q = marketQuote(await getMarket(force), from, to);
-          } catch (fallback) {
-            // Name the preferred source first; the fallback reason alone would be misleading.
-            throw new Error(
-              'Wise 暂不可用或不支持此币种。' + (fallback instanceof Error ? fallback.message : ''),
-            );
-          }
-          q.notice = 'Wise 暂不可用或不支持此币种，已使用每日参考价。' + q.notice;
-        }
-      }
-      q.stale =
-        !!q.stale ||
-        now - q.asOf >
-          (['wise', 'revolut'].includes(q.source)
-            ? 300000
-            : q.source === 'boc'
-              ? 86400000
-              : 3 * 86400000);
-      await write(key, q);
-      await pruneQuoteCache(key);
+      } else if (source === 'wise')
+        q = await coalesce(`wise:${from}:${to}`, () => wiseRate(from, to));
+      else q = await automatic(from, to, key, force);
+      if (q.provisional) return q;
+      await saveQuote(key, q);
       return q;
     } catch (e) {
       if (cache && now - cache.asOf < 7 * 86400000)
@@ -170,6 +203,8 @@ export async function handleMessage(m: any) {
       return saveSettings(m.patch as Partial<Settings>);
     case 'quote':
       return getQuote(m.from, m.to, m.source, m.force);
+    case 'peekQuote':
+      return peekQuote(m.from, m.to, m.source);
     case 'market':
       return getMarket(m.force);
     case 'compare':

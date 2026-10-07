@@ -13,7 +13,7 @@ const extension = path.resolve('release/chromium');
 const server = createServer((req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.end(
-    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="home">US$ 129.00</p><p id="price">€ 129.00</p><p>Ordinary text is not a price.</p><div id="wide" style="width:600px;overflow-x:auto"><div style="width:2400px"><span id="wide-price">€ 42.00</span></div></div></body></html>',
+    '<!doctype html><html lang="en"><title>RateGlide test price</title><body style="padding:80px;font:24px system-ui"><p id="home">US$ 129.00</p><p id="price">€ 129.00</p><p>Ticket <span id="dbl">€35.50</span></p><p>Sale <span id="sup">€129<sup>99</sup></span></p><p lang="zh-CN">京东价 <span id="yuan">￥899.00</span></p><p>Ordinary text is not a price.</p><div id="wide" style="width:600px;overflow-x:auto"><div style="width:2400px"><span id="wide-price">€ 42.00</span></div></div></body></html>',
   );
 });
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -109,7 +109,10 @@ try {
           amount = Number(p.get('amount')),
           fee = Number(p.get('fee')),
           base = (rates[to] || 1) / (rates[from] || 1),
-          rate = base * (1 + fee / 100);
+          rate = base * (1 + fee / 100),
+          // The calculator dates its rate by the requested day (MM/DD/YYYY).
+          [month, date, year] = p.get('exchangedate').split('/'),
+          day = Date.parse(`${year}-${month}-${date}T00:00:00Z`);
         return Response.json({
           status: 'success',
           conversionBankFee: fee,
@@ -120,7 +123,7 @@ try {
             fxRateVisa: base,
             fxRateWithAdditionalFee: rate,
             toAmountWithAdditionalFee: amount * rate,
-            asOfDate: Math.floor(now / 1000),
+            asOfDate: Math.floor(day / 1000),
             lastUpdatedVisaRate: Math.floor(now / 1000),
           },
         });
@@ -137,7 +140,10 @@ try {
             conversionRate: rate,
             crdhldBillAmt: amount * rate,
             crdhldBillCurr: to,
-            fxDate: new Date(now).toISOString().slice(0, 10),
+            fxDate:
+              p.get('exchange_date') === '0000-00-00'
+                ? new Date(now).toISOString().slice(0, 10)
+                : p.get('exchange_date'),
             transAmt: amount,
             transCurr: from,
             bankFee: fee,
@@ -177,12 +183,16 @@ try {
   });
   const id = sw.url().split('/')[2],
     base = `chrome-extension://${id}/`;
+  const welcomed = () => context.pages().some((p) => p.url().includes('practice.html?welcome=1'));
+  for (let i = 0; i < 50 && !welcomed(); i++) await new Promise((r) => setTimeout(r, 100));
+  check('a new installation opens the practice page', welcomed());
   page = await context.newPage();
   const rpc = (m) => page.evaluate((m) => chrome.runtime.sendMessage(m), m);
   const noHan = async (p, label) => {
     const text = await p.locator('body').innerText();
     assert.ok(
-      !/[\u3400-\u9fff]/.test(text.replace(/Browser \/ 浏览器|简体中文|中文/g, '')),
+      // Price examples such as 1,980円 stay in their original notation.
+      !/[\u3400-\u9fff]/.test(text.replace(/Browser \/ 浏览器|简体中文|中文|1,980円/g, '')),
       label + ' has untranslated text: ' + text.match(/[^\n]*[\u3400-\u9fff][^\n]*/g),
     );
     check(label);
@@ -214,7 +224,13 @@ try {
   await noHan(page, 'English converter and provider metadata');
   await fits(page, 400, 'English popup fits 400px');
   await page.screenshot({ path: path.join(out, 'english-converter.png'), animations: 'disabled' });
+  await page.locator('.other-chip').first().waitFor();
+  check('the converter shows the amount in watched currencies');
   await page.getByLabel('From currency', { exact: true }).click();
+  check(
+    'the popup currency sheet names the field being edited',
+    (await page.locator('.currency-menu-title').innerText()) === 'From currency',
+  );
   await page.getByLabel('Search currencies', { exact: true }).fill('japan');
   await page.getByLabel('Search currencies', { exact: true }).press('Enter');
   check(
@@ -276,6 +292,20 @@ try {
   check('English card validation errors');
   await page.getByLabel('Bank fee', { exact: true }).fill('0');
   await page.getByLabel('Visa estimated bill', { exact: true }).waitFor();
+  await page.locator('.over-mid').nth(1).waitFor();
+  check('card bills show their distance from the live mid-market rate');
+  // A past rate compared with today's mid-market rate would count market movement as markup.
+  const past = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  await page.getByLabel('Card rate date mode', { exact: true }).selectOption('custom');
+  await page.getByLabel('Card transaction date', { exact: true }).fill(past);
+  await page.locator(`[data-network="visa"][data-date="${past}"]`).waitFor();
+  await page.locator(`[data-network="mastercard"][data-date="${past}"]`).waitFor();
+  check(
+    'past card rates are not compared with the live mid-market rate',
+    (await page.locator('.over-mid').count()) === 0,
+  );
+  await page.getByLabel('Card rate date mode', { exact: true }).selectOption('latest');
+  await page.locator('.over-mid').nth(1).waitFor();
   await sw.evaluate(() => {
     globalThis.__rateGlideFailure = true;
   });
@@ -293,6 +323,11 @@ try {
   await page.goto(base + 'popup.html?popup=1&tab=compare&from=GBP&to=EUR&amount=1000');
   await page.locator('.compare-row').first().waitFor();
   await page.locator('.revolut-result').waitFor();
+  await page.locator('.total-cost').first().waitFor();
+  check(
+    'each transfer estimate shows its total cost against the mid-market rate',
+    (await page.locator('.total-cost').count()) === (await page.locator('.compare-row').count()),
+  );
   check(
     'the route with the most received is marked',
     (await page.locator('.compare-row').first().locator('.best-badge').innerText()) ===
@@ -324,6 +359,9 @@ try {
   await page.getByRole('tab', { name: 'Watchlist', exact: true }).click();
   await page.locator('.watch-row').first().waitFor();
   await noHan(page, 'English watchlist and currency names');
+  // Rows render before their rates arrive; the unit appears with the rates.
+  await page.locator('.watch-main').filter({ hasText: '1000 JPY / USD' }).waitFor();
+  check('small currencies are quoted per 1,000 units');
   const settings = await context.newPage();
   await settings.goto(base + 'options.html');
   await settings.getByLabel('Language', { exact: true }).waitFor();
@@ -432,6 +470,52 @@ try {
   });
   check('popup closes when horizontal scrolling moves the selection out of view');
   await practice.keyboard.press('Escape');
+  // A double-click selects only the digits; the currency symbol beside them still counts.
+  const dbl = await practice.locator('#dbl').boundingBox();
+  await practice.mouse.dblclick(dbl.x + dbl.width * 0.7, dbl.y + dbl.height / 2);
+  await practice.getByRole('button', { name: 'Convert to USD', exact: true }).waitFor();
+  check('double-clicking a number uses the currency symbol beside it');
+  await practice.keyboard.press('Escape');
+  await dragSelect('#sup');
+  await practice.getByRole('button', { name: 'Convert to USD', exact: true }).click();
+  await practice.locator('huijian-helper .original').filter({ hasText: '129.99 EUR' }).waitFor();
+  check('superscript cents are read as decimals');
+  await practice.keyboard.press('Escape');
+  await dragSelect('#yuan');
+  await practice.getByRole('button', { name: 'Convert to USD', exact: true }).click();
+  await practice.locator('huijian-helper .original').filter({ hasText: '899.00 CNY' }).waitFor();
+  check(
+    '¥ in a Chinese-language section is read as CNY and explained',
+    (await practice.locator('huijian-helper .hint').innerText()).includes('language or region'),
+  );
+  await practice.keyboard.press('Escape');
+  await rpc({ type: 'saveSettings', patch: { mode: 'hover' } });
+  // Hover over the price text itself; a block element's box extends far beyond its text.
+  const hovered = await practice.locator('#dbl').boundingBox();
+  await practice.mouse.move(hovered.x + hovered.width * 0.6, hovered.y + hovered.height / 2, {
+    steps: 4,
+  });
+  await practice.getByRole('button', { name: 'Convert to USD', exact: true }).waitFor();
+  check('hover mode prompts when the pointer rests on a price');
+  await practice.mouse.move(5, 5, { steps: 4 });
+  await practice.waitForFunction(() => !document.querySelector('huijian-helper'), null, {
+    timeout: 5000,
+  });
+  check('a hover prompt leaves with the pointer');
+  await rpc({
+    type: 'saveSettings',
+    patch: { mode: 'prompt', blockedSites: [new URL(origin).host] },
+  });
+  const badges = () =>
+    sw.evaluate(async () =>
+      Promise.all(
+        (await chrome.tabs.query({})).map((tab) => chrome.action.getBadgeText({ tabId: tab.id })),
+      ),
+    );
+  for (let i = 0; i < 30 && !(await badges()).includes('OFF'); i++)
+    await practice.waitForTimeout(100);
+  check('the toolbar badge shows OFF on a paused site', (await badges()).includes('OFF'));
+  await rpc({ type: 'saveSettings', patch: { blockedSites: [] } });
   await practice.goto(base + 'practice.html');
   await practice
     .getByRole('heading', { name: 'The world’s prices. Closer to home.', exact: true })
