@@ -109,7 +109,10 @@ try {
           amount = Number(p.get('amount')),
           fee = Number(p.get('fee')),
           base = (rates[to] || 1) / (rates[from] || 1),
-          rate = base * (1 + fee / 100);
+          rate = base * (1 + fee / 100),
+          // The calculator dates its rate by the requested day (MM/DD/YYYY).
+          [month, date, year] = p.get('exchangedate').split('/'),
+          day = Date.parse(`${year}-${month}-${date}T00:00:00Z`);
         return Response.json({
           status: 'success',
           conversionBankFee: fee,
@@ -120,7 +123,7 @@ try {
             fxRateVisa: base,
             fxRateWithAdditionalFee: rate,
             toAmountWithAdditionalFee: amount * rate,
-            asOfDate: Math.floor(now / 1000),
+            asOfDate: Math.floor(day / 1000),
             lastUpdatedVisaRate: Math.floor(now / 1000),
           },
         });
@@ -137,7 +140,10 @@ try {
             conversionRate: rate,
             crdhldBillAmt: amount * rate,
             crdhldBillCurr: to,
-            fxDate: new Date(now).toISOString().slice(0, 10),
+            fxDate:
+              p.get('exchange_date') === '0000-00-00'
+                ? new Date(now).toISOString().slice(0, 10)
+                : p.get('exchange_date'),
             transAmt: amount,
             transCurr: from,
             bankFee: fee,
@@ -286,6 +292,20 @@ try {
   check('English card validation errors');
   await page.getByLabel('Bank fee', { exact: true }).fill('0');
   await page.getByLabel('Visa estimated bill', { exact: true }).waitFor();
+  await page.locator('.over-mid').nth(1).waitFor();
+  check('card bills show their distance from the live mid-market rate');
+  // A past rate compared with today's mid-market rate would count market movement as markup.
+  const past = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  await page.getByLabel('Card rate date mode', { exact: true }).selectOption('custom');
+  await page.getByLabel('Card transaction date', { exact: true }).fill(past);
+  await page.locator(`[data-network="visa"][data-date="${past}"]`).waitFor();
+  await page.locator(`[data-network="mastercard"][data-date="${past}"]`).waitFor();
+  check(
+    'past card rates are not compared with the live mid-market rate',
+    (await page.locator('.over-mid').count()) === 0,
+  );
+  await page.getByLabel('Card rate date mode', { exact: true }).selectOption('latest');
+  await page.locator('.over-mid').nth(1).waitFor();
   await sw.evaluate(() => {
     globalThis.__rateGlideFailure = true;
   });

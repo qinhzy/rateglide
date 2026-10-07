@@ -91,9 +91,11 @@ export function Comparison({
   // Total cost against the mid-market rate: fees plus the exchange-rate markup, in one number.
   const mid = refs.find((q) => q.source === 'wise') ?? refs.find((q) => q.source === 'market');
   const ideal = mid && amount !== null ? amount * mid.rate : null;
-  const cost = (received: number) =>
-    ideal
-      ? { value: Math.max(0, ideal - received), share: Math.max(0, 1 - received / ideal) }
+  // Estimates collected over a day ago are historical; against today's rate, market movement
+  // would read as cost.
+  const cost = (r: CompareRow) =>
+    ideal && Date.now() - r.collectedAt <= 86400000
+      ? { value: Math.max(0, ideal - r.received), share: Math.max(0, 1 - r.received / ideal) }
       : null;
   const share = new Intl.NumberFormat(getLocale(), {
     style: 'percent',
@@ -239,16 +241,16 @@ export function Comparison({
                 <span>
                   {t('手续费')} {formatAmount(r.fee, value.from)} {value.from}
                 </span>
-                {cost(r.received) ? (
+                {cost(r) ? (
                   <span
                     className="total-cost"
                     title={t('比按{0}少到账 {1} {2}，含手续费与汇率加价', [
                       t(mid!.kind),
-                      formatAmount(cost(r.received)!.value, value.to),
+                      formatAmount(cost(r)!.value, value.to),
                       value.to,
                     ])}
                   >
-                    {t('总成本')} <b>{share.format(cost(r.received)!.share)}</b>
+                    {t('总成本')} <b>{share.format(cost(r)!.share)}</b>
                   </span>
                 ) : null}
               </div>

@@ -109,11 +109,16 @@ export function Cards({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  // Compare like with like: a mid-market quote for the same pair as the card quote.
-  const overMid = (q: CardQuote) =>
-    mid && mid.from === q.from && mid.to === q.to && q.amount > 0
-      ? q.total / (q.amount * mid.rate) - 1
-      : null;
+  // Compare like with like: the same pair, and a card rate published on the mid-market quote's
+  // day (or the day before, for the latest publication). A past date would count market
+  // movement as markup.
+  const overMid = (q: CardQuote) => {
+    if (!mid || mid.from !== q.from || mid.to !== q.to || q.amount <= 0) return null;
+    const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+    const sameTime =
+      q.rateDate === day(mid.asOf) || (!date && q.rateDate === day(mid.asOf - 86400000));
+    return sameTime ? q.total / (q.amount * mid.rate) - 1 : null;
+  };
   async function copy(q: CardQuote) {
     try {
       await navigator.clipboard.writeText(
