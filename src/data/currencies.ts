@@ -142,6 +142,15 @@ function region(names: Intl.DisplayNames | null, code: string) {
 export function currencyRegion(code: string) {
   return region(getLanguage() === 'en' ? enRegion : zhRegion, code);
 }
+/** A country or region code such as GB, in the interface language; empty when unknown. */
+export function regionName(code?: string) {
+  if (!code || !/^[A-Z]{2}$/.test(code)) return '';
+  try {
+    return (getLanguage() === 'en' ? enRegion : zhRegion)?.of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
 let index: { code: string; aliases: string[]; terms: string[] }[] | null = null;
 function searchIndex() {
   if (index) return index;

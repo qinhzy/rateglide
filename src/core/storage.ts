@@ -26,11 +26,11 @@ export function cleanSettings(input: Partial<Settings>): Settings {
   if (!['system', 'en', 'zh-CN'].includes(s.language)) s.language = 'system';
   for (const key of ['target', 'defaultDollar', 'defaultYen', 'defaultCurrency'] as const)
     if (!valid(s[key])) s[key] = DEFAULTS[key];
-  for (const key of ['enabled', 'numbersOnly', 'rememberHistory'] as const)
+  for (const key of ['enabled', 'smartSymbols', 'numbersOnly', 'rememberHistory'] as const)
     s[key] = typeof s[key] === 'boolean' ? s[key] : DEFAULTS[key];
   if (!['auto', 'wise', 'market', 'ecb', 'boc', 'visa', 'mastercard', 'revolut'].includes(s.source))
     s.source = 'auto';
-  if (!['prompt', 'instant', 'alt'].includes(s.mode)) s.mode = 'prompt';
+  if (!['prompt', 'instant', 'alt', 'hover'].includes(s.mode)) s.mode = 'prompt';
   if (!['system', 'light', 'dark'].includes(s.theme)) s.theme = 'system';
   s.bankFee = Number.isFinite(Number(s.bankFee)) ? Math.max(0, Math.min(30, Number(s.bankFee))) : 0;
   s.favorites = Array.isArray(s.favorites)
