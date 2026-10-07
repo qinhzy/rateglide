@@ -8,7 +8,7 @@ Requests use `credentials: omit` and `referrerPolicy: no-referrer`. Provider req
 
 Preferences and rate caches stay in browser-local storage. History is off by default. When enabled, it records only conversions that you explicitly copy, up to 50 entries. It stores amounts, currencies, results, source labels, and timestamps, but no page addresses or selected text. You can export or clear history in Settings. Removing the extension removes its local storage under normal browser behavior.
 
-The content script can run on ordinary HTTP and HTTPS webpages to detect currency selections. It skips inputs, password fields, and editable regions. You can pause selection conversion globally, exclude sites, or require Alt / Option. Browser permissions can further restrict website access.
+The content script can run on ordinary HTTP and HTTPS webpages to detect currency selections. It skips inputs, password fields, and editable regions. To read a symbol such as ¥ or a double-clicked number, it looks locally at the page’s language attribute, domain, title, and the few characters around the price; none of that text leaves the browser. The optional hover mode, off by default, reads the text under the pointer the same way and sends nothing until you open a conversion. The toolbar badge that shows a paused site is set locally from your exclusion list. You can pause selection conversion globally, exclude sites, or require Alt / Option. Browser permissions can further restrict website access.
 
 All executable code is bundled with the extension. It does not download remote scripts. The development server has local proxies for previewing APIs; installed extensions do not depend on that server.
 
@@ -18,4 +18,4 @@ Questions or problems: use this repository’s issue tracker without including a
 
 RateGlide · 汇见不提供账户登录、广告、分析埋点或转账功能，不读取银行凭据和卡号。选中文字在本机解析，只向报价来源发送必要的币种、金额、地区、日期或银行费率，不上传网页全文、标题、浏览历史或选中原文。数据提供方仍会收到正常网络连接信息，例如 IP 地址。
 
-偏好设置与缓存保存在浏览器本地。历史默认关闭，开启后仅记录主动复制的最近 50 条换算，可导出或清空。划词脚本跳过输入框和可编辑区域，并支持暂停、网站排除和按住 Alt / Option 才触发。安装后的插件不依赖本地开发服务器。
+偏好设置与缓存保存在浏览器本地。历史默认关闭，开启后仅记录主动复制的最近 50 条换算，可导出或清空。划词脚本跳过输入框和可编辑区域，并支持暂停、网站排除和按住 Alt / Option 才触发。判断 ¥ 等符号或双击的数字时，只在本机读取网页的语言标记、域名、标题和价格附近的少量字符，这些文字不会发出。默认关闭的悬停模式同样只在本机读取指针下的文字，打开换算前不发送任何请求。工具栏的停用角标由本机的屏蔽列表决定。安装后的插件不依赖本地开发服务器。

@@ -234,11 +234,16 @@ try {
   check('Escape closes floating panel', (await practice.locator('huijian-helper').count()) === 0);
   for (const sel of [
     '#eu-format',
+    '#yen-format',
+    '#jp-format',
     '#cn-format',
     '#in-format',
     '#ch-format',
     '#kr-format',
     '#th-format',
+    '#my-format',
+    '#id-format',
+    '#sup-format',
   ]) {
     await select(sel);
     await practice.getByRole('button', { name: '换算为 CNY', exact: true }).waitFor();
