@@ -1,9 +1,19 @@
-import { getLanguage, setLanguage, t, type LanguagePreference } from './i18n';
+import { getLanguage, registerMessages, setLanguage, t, type LanguagePreference } from './i18n';
+import { uiEnglish } from './i18n/messages';
 import { rpc } from './core/client';
 import { parseMoney } from './core/parser';
 import { ext } from './core/storage';
 import type { Settings } from './core/types';
+registerMessages(uiEnglish);
 
+// A new installation opens this page with a short welcome above the examples.
+if (new URLSearchParams(location.search).has('welcome')) {
+  const welcome = document.createElement('p');
+  welcome.className = 'welcome';
+  welcome.textContent =
+    '汇见已安装。试着拖动选中或双击下面的一笔价格；以后在任意网页都可以这样换算。';
+  document.querySelector('header')!.prepend(welcome);
+}
 const nodes: { node: Text; source: string }[] = [];
 const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 while (walker.nextNode()) {
@@ -55,7 +65,13 @@ function render(settings: Settings) {
 function markHomeCurrency(settings: Settings) {
   document.querySelectorAll('.home-tag').forEach((tag) => tag.remove());
   for (const price of document.querySelectorAll<HTMLElement>('.price, td[id$="-format"]')) {
-    if (parseMoney(price.textContent || '', settings)?.currency !== settings.target) continue;
+    // Read prices the way the selection helper does, including the page language.
+    const context = {
+      lang: price.closest('[lang]')?.getAttribute('lang') ?? '',
+      host: location.hostname,
+    };
+    if (parseMoney(price.textContent || '', settings, context)?.currency !== settings.target)
+      continue;
     const tag = document.createElement('span');
     tag.className = 'home-tag';
     tag.textContent = t('目标货币 · 不提示');

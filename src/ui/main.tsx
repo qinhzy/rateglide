@@ -1,4 +1,5 @@
-import { t, getLanguage, setLanguage, subscribeLanguage } from '../i18n';
+import { t, getLanguage, registerMessages, setLanguage, subscribeLanguage } from '../i18n';
+import { uiEnglish } from '../i18n/messages';
 import { StrictMode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, MousePointer2, Settings as SettingsIcon } from 'lucide-react';
@@ -22,6 +23,7 @@ import { Watchlist } from './Watchlist';
 import { Settings } from './Settings';
 import { Cards } from './Cards';
 import './styles.css';
+registerMessages(uiEnglish);
 const TABS = [
   ['convert', '换算'],
   ['compare', '比价'],
@@ -288,17 +290,15 @@ function App() {
             />
           )}
         </main>
-        {tab !== 'cards' ? (
+        {/* Result-heavy tabs keep their height for quotes; the toggle stays on the others. */}
+        {tab === 'convert' || tab === 'watch' ? (
           <footer className="popup-footer">
-            <MousePointer2 size={20} />
+            <MousePointer2 size={18} aria-hidden="true" />
             <div>
               <b>{t('网页划词')}</b>
-              <span>
-                {t(
-                  settings.enabled ? '选中外币价格，让换算随手发生' : '已暂停，仍可使用工具栏换算',
-                )}
-              </span>
-              {site && settings.enabled ? (
+              {!settings.enabled ? (
+                <span title={t('已暂停，仍可使用工具栏换算')}>{t('已暂停')}</span>
+              ) : site ? (
                 <button type="button" className="site-toggle" onClick={toggleSite}>
                   {paused
                     ? t('已在 {0} 停用 · 恢复', [displayHost])

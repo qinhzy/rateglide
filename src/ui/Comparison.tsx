@@ -1,9 +1,9 @@
-import { t } from '../i18n';
+import { t, getLocale } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { RevolutPanel } from './RevolutPanel';
 import { rpc } from '../core/client';
-import { decimals, formatAmount, formatRate } from '../data/currencies';
+import { decimals, formatAmount, formatRate, regionName } from '../data/currencies';
 import { countries } from '../data/directory';
 import type { CompareRow, Quote } from '../core/types';
 import {
@@ -88,6 +88,18 @@ export function Comparison({
   const best = filtered[0]?.received;
   // Differences below half a minor unit would display as zero.
   const minorUnit = 10 ** -decimals(value.to) / 2;
+  // Total cost against the mid-market rate: fees plus the exchange-rate markup, in one number.
+  const mid = refs.find((q) => q.source === 'wise') ?? refs.find((q) => q.source === 'market');
+  const ideal = mid && amount !== null ? amount * mid.rate : null;
+  const cost = (received: number) =>
+    ideal
+      ? { value: Math.max(0, ideal - received), share: Math.max(0, 1 - received / ideal) }
+      : null;
+  const share = new Intl.NumberFormat(getLocale(), {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   const regions = [sourceCountry, targetCountry].filter(Boolean).length;
   return (
     <section className="comparison">
@@ -174,6 +186,12 @@ export function Comparison({
         {t('按预计到账排序 · 银行转账 → 银行账户')}
         <br />
         {t('Wise 采集的第三方报价估算，非保证成交价。')}
+        {mid ? (
+          <>
+            <br />
+            {t('总成本 = 按{0}应到账 − 预计到账，含手续费与汇率加价。', [t(mid.kind)])}
+          </>
+        ) : null}
       </p>
       {loading ? (
         <Loading label={t('正在比较平台费用与到账金额…')} />
@@ -195,7 +213,9 @@ export function Comparison({
                     ) : null}
                   </b>
                   <small>
-                    {r.sourceCountry || t('未指定')} → {r.targetCountry || t('未指定')} ·{' '}
+                    {r.sourceCountry || r.targetCountry
+                      ? `${regionName(r.sourceCountry) || t('不限地区')} → ${regionName(r.targetCountry) || t('不限地区')} · `
+                      : ''}
                     {timeLabel(r.collectedAt)}
                   </small>
                 </div>
@@ -219,6 +239,18 @@ export function Comparison({
                 <span>
                   {t('手续费')} {formatAmount(r.fee, value.from)} {value.from}
                 </span>
+                {cost(r.received) ? (
+                  <span
+                    className="total-cost"
+                    title={t('比按{0}少到账 {1} {2}，含手续费与汇率加价', [
+                      t(mid!.kind),
+                      formatAmount(cost(r.received)!.value, value.to),
+                      value.to,
+                    ])}
+                  >
+                    {t('总成本')} <b>{share.format(cost(r.received)!.share)}</b>
+                  </span>
+                ) : null}
               </div>
               {Date.now() - r.collectedAt > 86400000 ? (
                 <p className="warning notice">

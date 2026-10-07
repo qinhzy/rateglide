@@ -1,7 +1,17 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { english } from '../src/i18n/messages';
-import { resolveLanguage, setLanguage, getLanguage, t, translate } from '../src/i18n';
+import { readFileSync, readdirSync } from 'node:fs';
+import { english, uiEnglish } from '../src/i18n/messages';
+import { coreEnglish } from '../src/i18n/messages-core';
+import {
+  resolveLanguage,
+  setLanguage,
+  getLanguage,
+  registerMessages,
+  t,
+  translate,
+} from '../src/i18n';
+registerMessages(uiEnglish);
 import { cleanSettings } from '../src/core/storage';
 import { currencyName } from '../src/data/currencies';
 import { SOURCE_LABELS } from '../src/core/providers';
@@ -76,4 +86,57 @@ test('Chinese and unknown diagnostic messages remain intact', () => {
   setLanguage('en');
   assert.equal(t('Network request failed'), 'Network request failed');
   assert.equal(t('1 USD = 0.85 EUR'), '1 USD = 0.85 EUR');
+});
+test('page-based currency hints translate', async () => {
+  const { parseMoney } = await import('../src/core/parser');
+  const { DEFAULTS } = await import('../src/core/types');
+  setLanguage('en');
+  for (const [text, context] of [
+    ['¥ 899', { lang: 'zh-CN' }],
+    ['100元', { lang: 'zh-TW' }],
+    ['199 kr', { host: 'shop.dk' }],
+    ['100元', undefined],
+  ] as const) {
+    const hint = parseMoney(text, DEFAULTS, context)!.hint!;
+    assert.ok(!/[\u3400-\u9fff]/.test(t(hint)), t(hint));
+  }
+  assert.equal(
+    t('$ 按 CAD 识别（根据网页语言或地区），可修改币种'),
+    '$ is read as CAD from this page’s language or region. You can change the currency.',
+  );
+});
+test('strings shown by the selection helper and background live in the core table', () => {
+  // The script injected into webpages bundles only coreEnglish. A UI-table string used by
+  // core, content or background code would appear untranslated in English popups.
+  const files = [
+    ...readdirSync('src/core').map((f) => 'src/core/' + f),
+    'src/content/index.ts',
+    'src/background.ts',
+    'src/data/currencies.ts',
+  ];
+  const source = files
+    .map((f) => readFileSync(f, 'utf8'))
+    .join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  const used = (key: string) => {
+    const parts = key.split(/\{\d+\}/).filter((p) => p.trim());
+    if (parts.length > 1 || parts[0] !== key)
+      return parts.length > 0 && parts.every((p) => source.includes(p));
+    return ["'", '"', '`'].some((q) => source.includes(q + key.replace(/\n/g, '\\n') + q));
+  };
+  for (const key of Object.keys(uiEnglish)) assert.ok(!used(key), `move to messages-core: ${key}`);
+  for (const key of Object.keys(coreEnglish)) assert.ok(!(key in uiEnglish), `duplicate: ${key}`);
+  assert.equal(
+    Object.keys(english).length,
+    Object.keys(coreEnglish).length + Object.keys(uiEnglish).length,
+  );
+});
+test('store listing fields fit the store limits', () => {
+  for (const locale of readdirSync('public/_locales')) {
+    const messages = JSON.parse(readFileSync(`public/_locales/${locale}/messages.json`, 'utf8'));
+    // Chrome Web Store rejects manifests whose name exceeds 75 or description 132 characters.
+    assert.ok([...messages.extensionName.message].length <= 75, locale);
+    assert.ok([...messages.extensionDescription.message].length <= 132, locale);
+  }
 });

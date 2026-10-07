@@ -1,4 +1,4 @@
-import { english } from './messages';
+import { coreEnglish } from './messages-core';
 
 export type Language = 'en' | 'zh-CN';
 export type LanguagePreference = 'system' | Language;
@@ -32,16 +32,26 @@ export function subscribeLanguage(listener: () => void) {
 
 // Source-language keys also translate cached v1 quotes without rewriting stored data.
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const patterns = Object.entries(english)
-  .filter(([key]) => /\{\d+\}/.test(key))
-  .map(([key, value]) => {
-    const slots: string[] = [];
-    const source = key
-      .split(/(\{\d+\})/)
-      .map((part) => (/^\{\d+\}$/.test(part) ? (slots.push(part), '([\\s\\S]*?)') : escape(part)))
-      .join('');
-    return { expression: new RegExp('^' + source + '$'), slots, value };
-  });
+// The selection helper ships only the shared core table; extension pages register the rest.
+const english: Record<string, string> = { ...coreEnglish };
+let patterns = compile();
+function compile() {
+  return Object.entries(english)
+    .filter(([key]) => /\{\d+\}/.test(key))
+    .map(([key, value]) => {
+      const slots: string[] = [];
+      const source = key
+        .split(/(\{\d+\})/)
+        .map((part) => (/^\{\d+\}$/.test(part) ? (slots.push(part), '([\\s\\S]*?)') : escape(part)))
+        .join('');
+      return { expression: new RegExp('^' + source + '$'), slots, value };
+    });
+}
+/** Adds English translations for strings beyond the shared core set. */
+export function registerMessages(table: Record<string, string>) {
+  Object.assign(english, table);
+  patterns = compile();
+}
 export function translate(source: string, language: Language = getLanguage()): string {
   if (language === 'zh-CN' || !source) return source;
   if (english[source] !== undefined) return english[source];

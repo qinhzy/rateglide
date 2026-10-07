@@ -7,6 +7,7 @@ import {
   Database,
   Download,
   History,
+  Info,
   MousePointer2,
   Settings2,
   ShieldCheck,
@@ -97,21 +98,25 @@ export function Settings({
   save: (s: Partial<Prefs>) => Promise<void>;
 }) {
   const [tab, setTab] = useState(tabFromHash),
-    [saved, setSaved] = useState(false),
-    [error, setError] = useState('');
+    [toast, setToast] = useState<{ text: string; error?: boolean; id: number } | null>(null);
   const shortcut = useShortcut();
   useEffect(() => {
     const sync = () => setTab(tabFromHash());
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, []);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), toast.error ? 6000 : 1800);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  // Feedback appears at the bottom of the window, next to wherever the change was made.
   async function update(p: Partial<Prefs>) {
     try {
       await save(p);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1800);
+      setToast({ text: '已保存', id: Date.now() });
     } catch (e) {
-      setError((e as Error).message);
+      setToast({ text: (e as Error).message, error: true, id: Date.now() });
     }
   }
   const nav = [
@@ -154,16 +159,25 @@ export function Settings({
         <header>
           <h1>{t('让每一次兑换，心中有数。')}</h1>
           <p>{t('在任意网页，选中外币价格，即刻换算、比价、掌握汇率来源。')}</p>
-          <span className="save-status" role="status">
-            {saved ? (
+        </header>
+        <div className="toast-region">
+          <span className="toast" role="status">
+            {toast && !toast.error ? (
               <>
                 <Check size={15} />
-                {t('已保存')}
+                {t(toast.text)}
               </>
             ) : null}
           </span>
-        </header>
-        {error ? <ErrorBox message={error} /> : null}
+          <span className="toast error" role="alert">
+            {toast?.error ? (
+              <>
+                <Info size={15} />
+                {t(toast.text)}
+              </>
+            ) : null}
+          </span>
+        </div>
         {tab === 'preferences' ? (
           <>
             <section className="settings-section">
@@ -206,6 +220,18 @@ export function Settings({
                   />
                 </SettingRow>
                 <SettingRow
+                  title={t('根据网页判断符号')}
+                  description={t(
+                    '按网页的语言、域名和文字判断 $、¥、kr 与数字格式，例如中文网页的 ¥ 为人民币；判断不了时使用上面的默认值',
+                  )}
+                >
+                  <Toggle
+                    checked={settings.smartSymbols}
+                    label={t('根据网页判断符号')}
+                    onChange={(smartSymbols) => update({ smartSymbols })}
+                  />
+                </SettingRow>
+                <SettingRow
                   title={t('首选汇率来源')}
                   description={t('智能选择优先 Wise，失败时明确提示使用每日参考价')}
                 >
@@ -245,6 +271,7 @@ export function Settings({
                     <option value="prompt">{t('选中后提示')}</option>
                     <option value="instant">{t('选中后直接换算')}</option>
                     <option value="alt">{t('按住 Alt / Option 再选中')}</option>
+                    <option value="hover">{t('悬停或选中时提示')}</option>
                   </select>
                 </SettingRow>
                 {shortcut !== null ? (
@@ -412,15 +439,15 @@ function Guide({ target, shortcut }: { target: string; shortcut: string | null }
           {[
             [
               '金额怎么识别',
-              '支持 ISO 币种代码、常见符号、中文币名、欧美小数格式、印度分组、万／亿与 k／m。选中多个价格或范围不会自动相加。',
+              '支持 ISO 币种代码、常见符号与本地写法（円、원、RM、Rp、zł、kr 等）、中文币名、欧美小数格式、印度分组、万／亿、k／m／million 与 lakh／crore。双击数字时，紧挨着的货币符号也会一起识别。选中多个价格或范围不会自动相加。',
             ],
             [
               '$ 和 ¥ 是哪种货币',
-              '同一符号可能代表不同货币。默认 $ 为美元、¥ 为日元，提示中会标明；可在浮层或设置里更改。',
+              '同一符号可能代表不同货币。默认按网页的语言和地区判断，例如中文网页的 ¥ 为人民币、加拿大网站的 $ 为加元；判断不了时 $ 为美元、¥ 为日元。提示中会标明依据，可在浮层或设置里更改。',
             ],
             [
               '不想每次点击提示',
-              '在偏好设置切换到「选中后直接换算」，或仅在按住 Alt / Option 选中时触发。',
+              '在偏好设置切换到「选中后直接换算」，或仅在按住 Alt / Option 选中时触发；选择「悬停或选中时提示」后，鼠标停在价格上片刻也会出现提示。',
             ],
             [
               '快捷键与右键',

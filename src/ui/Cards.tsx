@@ -1,10 +1,10 @@
-import { t } from '../i18n';
+import { t, getLocale } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpDown, Check, Copy, CreditCard, RefreshCw } from 'lucide-react';
 import { rpc } from '../core/client';
 import { CARD_LABELS, today } from '../core/payments';
 import { parseAmount, parseNumber } from '../core/parser';
-import type { CardNetwork, CardQuote, Settings } from '../core/types';
+import type { CardNetwork, CardQuote, Quote, Settings } from '../core/types';
 import { decimals, formatAmount, formatRate } from '../data/currencies';
 import {
   CurrencyPicker,
@@ -32,7 +32,8 @@ export function Cards({
     [results, setResults] = useState<Partial<Record<CardNetwork, CardQuote>>>({}),
     [errors, setErrors] = useState<Partial<Record<CardNetwork, string>>>({}),
     [busy, setBusy] = useState<CardNetwork[]>([]),
-    [copied, setCopied] = useState('');
+    [copied, setCopied] = useState(''),
+    [mid, setMid] = useState<Quote | null>(null);
   const serial = useRef(0),
     amount = parseAmount(value.amount),
     bankFee = parseNumber(fee);
@@ -43,6 +44,18 @@ export function Cards({
       : bankFee === null || bankFee < 0 || bankFee > 30
         ? '附加费应为 0% 到 30%'
         : null;
+  useEffect(() => {
+    // The live mid-market rate shows how much each network adds on top, fee included.
+    let alive = true;
+    setMid(null);
+    if (value.from !== value.to)
+      rpc<Quote>({ type: 'quote', from: value.from, to: value.to, source: 'wise' })
+        .then((q) => alive && setMid(q))
+        .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [value.from, value.to]);
   useEffect(() => {
     const id = ++serial.current;
     setResults({});
@@ -89,6 +102,17 @@ export function Cards({
       ? pair[0].total < pair[1].total
         ? pair[0]
         : pair[1]
+      : null;
+  const markup = new Intl.NumberFormat(getLocale(), {
+    style: 'percent',
+    signDisplay: 'exceptZero',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  // Compare like with like: a mid-market quote for the same pair as the card quote.
+  const overMid = (q: CardQuote) =>
+    mid && mid.from === q.from && mid.to === q.to && q.amount > 0
+      ? q.total / (q.amount * mid.rate) - 1
       : null;
   async function copy(q: CardQuote) {
     try {
@@ -262,6 +286,14 @@ export function Cards({
                           {formatAmount(q.feeAmount, q.to)} {q.to}
                         </b>
                       </span>
+                      {overMid(q) !== null ? (
+                        <span
+                          className="over-mid"
+                          title={t('按{0}换算，账单含附加费', [t(mid!.kind)])}
+                        >
+                          {t('较中间价')} <b>{markup.format(overMid(q)!)}</b>
+                        </span>
+                      ) : null}
                     </div>
                     <div className="network-date">
                       <time>{q.rateDate}</time>
