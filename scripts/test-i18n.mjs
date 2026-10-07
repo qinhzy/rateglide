@@ -339,10 +339,9 @@ try {
   await page.getByRole('tab', { name: 'Watchlist', exact: true }).click();
   await page.locator('.watch-row').first().waitFor();
   await noHan(page, 'English watchlist and currency names');
-  check(
-    'small currencies are quoted per 1,000 units',
-    (await page.locator('.watch-main').filter({ hasText: '1000 JPY / USD' }).count()) === 1,
-  );
+  // Rows render before their rates arrive; the unit appears with the rates.
+  await page.locator('.watch-main').filter({ hasText: '1000 JPY / USD' }).waitFor();
+  check('small currencies are quoted per 1,000 units');
   const settings = await context.newPage();
   await settings.goto(base + 'options.html');
   await settings.getByLabel('Language', { exact: true }).waitFor();
